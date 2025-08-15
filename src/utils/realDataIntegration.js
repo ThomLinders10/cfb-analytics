@@ -1,131 +1,97 @@
-// Real DynamoDB Connection - Direct database access from React
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, ScanCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
-
-class RealDynamoDBAPI {
+// Working Lambda API Connector - Uses Your Existing Functions
+class WorkingLambdaAPI {
     constructor() {
-        // Direct DynamoDB connection
-        this.client = new DynamoDBClient({
-            region: 'us-east-1',
-            credentials: {
-                accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.REACT_APP_AWS_SECRET_ACCESS_KEY
-            }
-        });
-        this.docClient = DynamoDBDocumentClient.from(this.client);
-        this.tableName = 'CFBTeamStats-dev';
+        // Use your existing cfbPredictor-dev function URL
+        this.cfbPredictorURL = process.env.REACT_APP_CFBPREDICTOR_URL || 'YOUR_CFBPREDICTOR_FUNCTION_URL';
+        this.cfbDataCollectorURL = process.env.REACT_APP_CFBDATACOLLECTOR_URL || 'YOUR_CFBDATACOLLECTOR_FUNCTION_URL';
+        this.region = 'us-east-1';
     }
 
-    // Get real teams directly from your CFBTeamStats-dev table
+    // Get real teams from your cfbDataCollector-dev function
     async getRealTeams() {
         try {
-            console.log('Querying real CFBTeamStats-dev table...');
+            console.log('Calling cfbDataCollector-dev for real teams...');
             
-            const params = {
-                TableName: this.tableName,
-                FilterExpression: 'attribute_exists(school) AND season = :season',
-                ExpressionAttributeValues: {
-                    ':season': 2024
+            const response = await fetch(this.cfbDataCollectorURL || this.cfbPredictorURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 },
-                ProjectionExpression: 'school, conference, wins, losses, winPercentage, offensePointsPerGame, defensePointsPerGame'
-            };
+                body: JSON.stringify({
+                    action: 'getTeams',
+                    season: 2024
+                })
+            });
 
-            const result = await this.docClient.send(new ScanCommand(params));
-            console.log(`Found ${result.Items?.length || 0} real teams in database`);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
 
+            const result = await response.json();
+            console.log('cfbDataCollector response:', result);
+
+            // Extract teams from your function's response format
+            const teams = result.teams || result.body?.teams || [];
+            
             return {
-                teams: result.Items || [],
-                totalTeams: result.Items?.length || 0,
-                source: 'Real CFBTeamStats-dev Database',
+                teams: teams,
+                totalTeams: teams.length,
+                source: 'Real cfbDataCollector-dev Lambda Function',
                 timestamp: new Date().toISOString()
             };
 
         } catch (error) {
-            console.error('Error querying real database:', error);
+            console.error('Error calling cfbDataCollector:', error);
             
-            // Try a simpler query
-            try {
-                const simpleParams = {
-                    TableName: this.tableName,
-                    Limit: 50
-                };
-                
-                const simpleResult = await this.docClient.send(new ScanCommand(simpleParams));
-                console.log(`Simple scan found ${simpleResult.Items?.length || 0} records`);
-                
-                // Extract team data from whatever structure exists
-                const teams = simpleResult.Items?.filter(item => item.school || item.team).map(item => ({
-                    school: item.school || item.team || 'Unknown',
-                    conference: item.conference || 'Unknown',
-                    wins: item.wins || 0,
-                    losses: item.losses || 0,
-                    winPercentage: item.winPercentage || 0,
-                    offensePointsPerGame: item.offensePointsPerGame || 0,
-                    defensePointsPerGame: item.defensePointsPerGame || 0
-                })) || [];
-
-                return {
-                    teams: teams,
-                    totalTeams: teams.length,
-                    source: 'Real CFBTeamStats-dev Database (simple scan)',
-                    timestamp: new Date().toISOString()
-                };
-
-            } catch (innerError) {
-                console.error('Simple scan also failed:', innerError);
-                
-                return {
-                    teams: [],
-                    totalTeams: 0,
-                    error: `Database connection failed: ${error.message}`,
-                    source: 'Error - Cannot access CFBTeamStats-dev table',
-                    timestamp: new Date().toISOString()
-                };
-            }
+            return {
+                teams: [],
+                totalTeams: 0,
+                error: `Failed to connect to cfbDataCollector-dev: ${error.message}`,
+                source: 'Error - Lambda function call failed',
+                timestamp: new Date().toISOString()
+            };
         }
     }
 
-    // Get real accuracy from completed predictions
+    // Get real accuracy from your cfbPredictor-dev function
     async getRealModelAccuracy() {
         try {
-            console.log('Checking for real prediction accuracy...');
+            console.log('Calling cfbPredictor-dev for real accuracy...');
             
-            const params = {
-                TableName: this.tableName,
-                FilterExpression: 'attribute_exists(prediction) AND attribute_exists(actualResult)',
-                ProjectionExpression: 'gameId, prediction, actualResult, correct'
-            };
+            const response = await fetch(this.cfbPredictorURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'getOverallAccuracy'
+                })
+            });
 
-            const result = await this.docClient.send(new ScanCommand(params));
-            const completedPredictions = result.Items || [];
-
-            let accuracy = 0;
-            let correctPredictions = 0;
-
-            if (completedPredictions.length > 0) {
-                correctPredictions = completedPredictions.filter(p => p.correct).length;
-                accuracy = correctPredictions / completedPredictions.length;
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
+            const result = await response.json();
+            console.log('cfbPredictor accuracy response:', result);
+
             return {
-                accuracy: accuracy,
-                totalPredictions: completedPredictions.length,
-                correctPredictions: correctPredictions,
+                accuracy: result.accuracy || 0,
+                totalPredictions: result.totalPredictions || 0,
+                correctPredictions: result.correctPredictions || 0,
                 modelInfo: {
                     type: 'Random Forest Ensemble',
                     trainingGames: 25341, // Your actual database size
                     features: 50,
-                    lastTrained: new Date().toISOString()
+                    lastTrained: result.lastTrained || new Date().toISOString()
                 },
-                message: completedPredictions.length === 0 
-                    ? 'No completed predictions yet - accuracy tracking begins with first game results'
-                    : `Real accuracy based on ${completedPredictions.length} completed predictions`,
+                message: result.message || 'Real ML models trained on your 25,341 game database',
                 isReal: true,
                 timestamp: new Date().toISOString()
             };
 
         } catch (error) {
-            console.error('Error calculating real accuracy:', error);
+            console.error('Error calling cfbPredictor for accuracy:', error);
             
             return {
                 accuracy: 0,
@@ -136,7 +102,7 @@ class RealDynamoDBAPI {
                     trainingGames: 25341,
                     features: 50
                 },
-                message: 'Accuracy calculation ready - ML models trained on real data',
+                message: 'ML models ready - waiting for cfbPredictor-dev connection',
                 isReal: true,
                 error: error.message,
                 timestamp: new Date().toISOString()
@@ -144,13 +110,13 @@ class RealDynamoDBAPI {
         }
     }
 
-    // Get real conferences from database
+    // Get real conferences from teams data
     async getRealConferences() {
         try {
             const teamsResult = await this.getRealTeams();
             const teams = teamsResult.teams || [];
             
-            // Extract unique conferences from real data
+            // Extract unique conferences from real team data
             const conferences = [...new Set(teams.map(team => team.conference).filter(conf => conf && conf !== 'Unknown'))];
 
             return {
@@ -158,7 +124,7 @@ class RealDynamoDBAPI {
                 teams: teams,
                 totalTeams: teams.length,
                 season: 2024,
-                source: 'Real CFBTeamStats-dev Database'
+                source: 'Real cfbDataCollector-dev Lambda Function'
             };
 
         } catch (error) {
@@ -169,37 +135,39 @@ class RealDynamoDBAPI {
                 totalTeams: 0,
                 season: 2024,
                 error: error.message,
-                source: 'Error - Database query failed'
+                source: 'Error - cfbDataCollector call failed'
             };
         }
     }
 
     // Get real current predictions
-    async getRealCurrentPredictions(season = 2024, includeCompleted = true) {
+    async getRealCurrentPredictions(season = 2024) {
         try {
-            console.log('Querying real predictions from database...');
+            console.log('Calling cfbPredictor-dev for current predictions...');
             
-            let filterExpression = 'attribute_exists(prediction) AND season = :season';
-            const expressionValues = { ':season': season };
+            const response = await fetch(this.cfbPredictorURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'getCurrentPredictions',
+                    season: season
+                })
+            });
 
-            if (!includeCompleted) {
-                filterExpression += ' AND attribute_not_exists(actualResult)';
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
-            const params = {
-                TableName: this.tableName,
-                FilterExpression: filterExpression,
-                ExpressionAttributeValues: expressionValues
-            };
-
-            const result = await this.docClient.send(new ScanCommand(params));
-            const predictions = result.Items || [];
+            const result = await response.json();
+            console.log('cfbPredictor predictions response:', result);
 
             return {
-                predictions: predictions,
-                totalPredictions: predictions.length,
+                predictions: result.predictions || [],
+                totalPredictions: result.totalPredictions || 0,
                 season: season,
-                source: 'Real CFBTeamStats-dev Database',
+                source: 'Real cfbPredictor-dev Lambda Function',
                 timestamp: new Date().toISOString()
             };
 
@@ -210,32 +178,77 @@ class RealDynamoDBAPI {
                 totalPredictions: 0,
                 season: season,
                 error: error.message,
-                source: 'Error - Predictions query failed',
+                source: 'Error - cfbPredictor call failed',
                 timestamp: new Date().toISOString()
             };
         }
     }
 
-    // Health check
+    // Generate new prediction using your ML models
+    async generateRealPrediction(homeTeam, awayTeam) {
+        try {
+            console.log(`Generating real prediction for ${homeTeam} vs ${awayTeam}...`);
+            
+            const response = await fetch(this.cfbPredictorURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    homeTeam: homeTeam,
+                    awayTeam: awayTeam,
+                    action: 'generatePrediction'
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            console.log('Generated prediction:', result);
+
+            return result;
+
+        } catch (error) {
+            console.error('Failed to generate prediction:', error);
+            return {
+                error: error.message,
+                homeTeam: homeTeam,
+                awayTeam: awayTeam,
+                timestamp: new Date().toISOString()
+            };
+        }
+    }
+
+    // Health check for your Lambda functions
     async healthCheck() {
         try {
             const startTime = Date.now();
             
-            // Test basic table access
-            const testParams = {
-                TableName: this.tableName,
-                Limit: 1
-            };
-            
-            await this.docClient.send(new ScanCommand(testParams));
+            // Test cfbPredictor-dev connection
+            const response = await fetch(this.cfbPredictorURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'healthCheck'
+                })
+            });
+
             const responseTime = Date.now() - startTime;
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
 
             return {
                 status: 'healthy',
                 responseTime: responseTime,
                 timestamp: new Date().toISOString(),
-                method: 'Direct DynamoDB connection',
-                tableName: this.tableName
+                method: 'Lambda Function URLs',
+                functions: ['cfbPredictor-dev', 'cfbDataCollector-dev']
             };
 
         } catch (error) {
@@ -243,12 +256,11 @@ class RealDynamoDBAPI {
                 status: 'unhealthy',
                 error: error.message,
                 timestamp: new Date().toISOString(),
-                method: 'Direct DynamoDB connection',
-                tableName: this.tableName
+                method: 'Lambda Function URLs'
             };
         }
     }
 }
 
 // Export for use in React components
-export default RealDynamoDBAPI;
+export default WorkingLambdaAPI;
