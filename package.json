@@ -7,6 +7,8 @@
     "@aws-amplify/api": "^6.3.17",
     "@aws-amplify/auth": "^6.15.0",
     "@aws-amplify/storage": "^6.9.5",
+    "@aws-sdk/client-dynamodb": "^3.868.0",
+    "@aws-sdk/lib-dynamodb": "^3.868.0",
     "@stripe/react-stripe-js": "^3.9.0",
     "@stripe/stripe-js": "^7.8.0",
     "aws-amplify": "^6.15.5",
