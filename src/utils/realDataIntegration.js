@@ -1,309 +1,344 @@
-// Real Data Integration for College Sports Predictions
-// This replaces all hardcoded values with live data from your database
-
-// 1. REAL ACCURACY CALCULATION
-export const calculateRealAccuracy = async () => {
-  try {
-    const response = await fetch('/api/accuracy/live', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-      }
-    });
-    
-    const data = await response.json();
-    
-    // Return actual calculated accuracy from your prediction results
-    return {
-      overall: data.totalCorrect / data.totalPredictions * 100,
-      thisWeek: data.weekCorrect / data.weekPredictions * 100,
-      lastMonth: data.monthCorrect / data.monthPredictions * 100,
-      byConference: data.conferenceAccuracy,
-      lastUpdated: data.lastCalculated
-    };
-  } catch (error) {
-    console.error('Failed to fetch real accuracy:', error);
-    // Fallback to database query if API fails
-    return await getAccuracyFromDatabase();
-  }
-};
-
-// 2. REAL GAME PREDICTIONS (no hardcoded scores)
-export const getRealGamePredictions = async () => {
-  try {
-    const response = await fetch('/api/predictions/upcoming', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    const games = await response.json();
-    
-    // Return only games with actual ML predictions
-    return games.filter(game => 
-      game.prediction && 
-      game.prediction.confidence > 0 && 
-      game.prediction.calculatedAt
-    ).map(game => ({
-      id: game.gameId,
-      gameDate: game.scheduledDate,
-      homeTeam: {
-        name: game.homeTeam.name,
-        logo: game.homeTeam.logoUrl,
-        rank: game.homeTeam.currentRank
-      },
-      awayTeam: {
-        name: game.awayTeam.name,
-        logo: game.awayTeam.logoUrl,
-        rank: game.awayTeam.currentRank
-      },
-      // REAL prediction data from your ML model
-      predictedWinner: game.prediction.winner,
-      confidence: Math.round(game.prediction.confidence * 100),
-      predictedScore: {
-        home: game.prediction.homeScore,
-        away: game.prediction.awayScore
-      },
-      spread: game.prediction.spread,
-      overUnder: game.prediction.overUnder,
-      // Data integrity tracking
-      lastUpdated: game.prediction.calculatedAt,
-      dataPoints: game.prediction.dataPointsUsed,
-      modelVersion: game.prediction.modelVersion
-    }));
-  } catch (error) {
-    console.error('Failed to fetch real predictions:', error);
-    return []; // Return empty rather than fake data
-  }
-};
-
-// 3. REAL TEAM STATS (for video scripts)
-export const getRealTeamStats = async (teamId, opponentId) => {
-  try {
-    const response = await fetch(`/api/teams/${teamId}/stats?opponent=${opponentId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    const stats = await response.json();
-    
-    // Return actual team performance data
-    return {
-      team: {
-        name: stats.team.name,
-        record: `${stats.team.wins}-${stats.team.losses}`,
-        avgPointsScored: stats.offense.avgPointsPerGame,
-        avgYardsPerGame: stats.offense.avgYardsPerGame,
-        passingYards: stats.offense.avgPassingYards,
-        rushingYards: stats.offense.avgRushingYards,
-        avgPointsAllowed: stats.defense.avgPointsAllowed,
-        defensiveRanking: stats.defense.nationalRanking,
-        recentForm: stats.recentGames.slice(-5), // Last 5 games
-        keyInjuries: stats.injuries.filter(i => i.severity === 'out'),
-        keyPlayers: stats.keyPlayers
-      },
-      opponent: {
-        name: stats.opponent.name,
-        defensiveWeaknesses: stats.opponent.defensiveWeaknesses,
-        offensiveStrengths: stats.opponent.offensiveStrengths,
-        headToHead: stats.headToHeadRecord
-      },
-      prediction: {
-        confidence: stats.prediction.confidence,
-        keyFactors: stats.prediction.topFactors,
-        score: stats.prediction.score,
-        reasoning: stats.prediction.aiReasoning
-      }
-    };
-  } catch (error) {
-    console.error('Failed to fetch real team stats:', error);
-    return null; // Don't generate video without real data
-  }
-};
-
-// 4. DYNAMIC ACCURACY COMPONENT (replaces hardcoded values)
-import React, { useState, useEffect } from 'react';
-
-export const LiveAccuracyDisplay = () => {
-  const [accuracy, setAccuracy] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState(null);
-
-  useEffect(() => {
-    const fetchAccuracy = async () => {
-      try {
-        const realAccuracy = await calculateRealAccuracy();
-        setAccuracy(realAccuracy);
-        setLastUpdated(new Date(realAccuracy.lastUpdated));
-      } catch (error) {
-        console.error('Accuracy fetch failed:', error);
-        // Don't show fake numbers on error
-        setAccuracy({ overall: 0, error: true });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAccuracy();
-    
-    // Update accuracy every 30 minutes
-    const interval = setInterval(fetchAccuracy, 30 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  if (loading) {
-    return <div className="accuracy-loading">Calculating live accuracy...</div>;
-  }
-
-  if (accuracy?.error) {
-    return <div className="accuracy-error">Unable to load current accuracy</div>;
-  }
-
-  return (
-    <div className="live-accuracy">
-      <div className="accuracy-value">
-        {accuracy.overall.toFixed(1)}%
-      </div>
-      <div className="accuracy-label">Current Accuracy</div>
-      <div className="accuracy-updated">
-        Updated: {lastUpdated?.toLocaleString()}
-      </div>
-      {accuracy.overall < 85 && (
-        <div className="accuracy-disclaimer">
-          *Accuracy varies by sport and conference
-        </div>
-      )}
-    </div>
-  );
-};
-
-// 5. AVATAR SCRIPT GENERATOR (using real data only)
-export const generateRealVideoScript = async (type, teamId = null) => {
-  try {
-    if (type === 'welcome') {
-      const accuracy = await calculateRealAccuracy();
-      const upcomingGames = await getRealGamePredictions();
-      
-      if (!accuracy || accuracy.overall === 0) {
-        return null; // Don't generate video without real accuracy
-      }
-      
-      return {
-        scriptText: `Welcome to College Sports Predictions! I'm Bob, and our advanced analytics system currently maintains a ${accuracy.overall.toFixed(1)}% accuracy rate across ${upcomingGames.length} upcoming games. We analyze over 320,000 real data points to bring you the most reliable predictions in college sports.`,
-        dataSource: 'live_accuracy',
-        generated: new Date().toISOString(),
-        accuracy: accuracy.overall
-      };
+// Real Data API Connector - No Mock Data Allowed
+class RealDataAPI {
+    constructor() {
+        this.baseURL = process.env.REACT_APP_API_GATEWAY_URL || 
+                       process.env.REACT_APP_ML_ENGINE_URL ||
+                       'https://your-api-gateway-id.execute-api.us-east-1.amazonaws.com/dev';
+        this.region = process.env.REACT_APP_REGION || 'us-east-1';
     }
-    
-    if (type === 'team' && teamId) {
-      const teamStats = await getRealTeamStats(teamId);
-      
-      if (!teamStats || !teamStats.prediction) {
-        return null; // Don't generate without real prediction
-      }
-      
-      const script = `Hi, I'm Rita reporting from the field! ${teamStats.team.name} is coming into this matchup with a ${teamStats.team.record} record. Our prediction model shows ${teamStats.prediction.reasoning} We're calling for a final score of ${teamStats.prediction.score.away}-${teamStats.prediction.score.home} with ${teamStats.prediction.confidence}% confidence.`;
-      
-      return {
-        scriptText: script,
-        dataSource: 'real_team_stats',
-        generated: new Date().toISOString(),
-        confidence: teamStats.prediction.confidence,
-        keyFactors: teamStats.prediction.keyFactors
-      };
+
+    // Real API call wrapper with error handling
+    async makeAPICall(endpoint, data = {}, method = 'POST') {
+        try {
+            const response = await fetch(`${this.baseURL}${endpoint}`, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: method === 'GET' ? undefined : JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            return result;
+
+        } catch (error) {
+            console.error(`API call failed for ${endpoint}:`, error);
+            throw new Error(`API Error: ${error.message}`);
+        }
     }
-    
-  } catch (error) {
-    console.error('Failed to generate real script:', error);
-    return null; // Never return fake data
-  }
+
+    // Get real teams from database
+    async getRealTeams() {
+        try {
+            const result = await this.makeAPICall('/teams', {}, 'GET');
+            return {
+                teams: result.teams || [],
+                totalTeams: result.totalTeams || 0,
+                source: 'Real Database'
+            };
+        } catch (error) {
+            console.error('Failed to get real teams:', error);
+            return {
+                teams: [],
+                totalTeams: 0,
+                error: error.message,
+                source: 'Error - Database Unavailable'
+            };
+        }
+    }
+
+    // Get real team data with all statistics
+    async getRealTeamData(teamName, season = 2024) {
+        try {
+            const result = await this.makeAPICall('/team-data', {
+                teamName: teamName,
+                season: season
+            });
+
+            return result.team;
+        } catch (error) {
+            console.error(`Failed to get team data for ${teamName}:`, error);
+            return null;
+        }
+    }
+
+    // Get real model accuracy - never return fake numbers
+    async getRealModelAccuracy() {
+        try {
+            const result = await this.makeAPICall('/model-accuracy', {
+                action: 'getOverallAccuracy'
+            });
+
+            return {
+                accuracy: result.accuracy || 0,
+                totalPredictions: result.totalPredictions || 0,
+                correctPredictions: result.correctPredictions || 0,
+                modelInfo: result.modelInfo || null,
+                message: result.message || 'No accuracy data available',
+                isReal: true,
+                lastUpdated: new Date().toISOString()
+            };
+
+        } catch (error) {
+            console.error('Failed to get real model accuracy:', error);
+            return {
+                accuracy: 0,
+                totalPredictions: 0,
+                correctPredictions: 0,
+                modelInfo: null,
+                message: 'Accuracy calculation unavailable - API error',
+                isReal: true,
+                error: error.message
+            };
+        }
+    }
+
+    // Get real current predictions
+    async getRealCurrentPredictions(season = 2024, includeCompleted = true) {
+        try {
+            const result = await this.makeAPICall('/current-predictions', {
+                season: season,
+                includeCompleted: includeCompleted
+            });
+
+            return {
+                predictions: result.predictions || [],
+                totalPredictions: result.totalPredictions || 0,
+                season: season,
+                source: 'Real ML Model Predictions'
+            };
+
+        } catch (error) {
+            console.error('Failed to get real predictions:', error);
+            return {
+                predictions: [],
+                totalPredictions: 0,
+                season: season,
+                error: error.message,
+                source: 'Error - Predictions Unavailable'
+            };
+        }
+    }
+
+    // Generate real prediction using ML model
+    async generateRealPrediction(homeTeam, awayTeam, gameId = null) {
+        try {
+            const result = await this.makeAPICall('/generate-prediction', {
+                homeTeam: homeTeam,
+                awayTeam: awayTeam,
+                gameId: gameId
+            });
+
+            return {
+                ...result,
+                isReal: true,
+                generatedAt: new Date().toISOString(),
+                source: 'Real ML Random Forest Model'
+            };
+
+        } catch (error) {
+            console.error(`Failed to generate prediction for ${homeTeam} vs ${awayTeam}:`, error);
+            return {
+                error: error.message,
+                homeTeam: homeTeam,
+                awayTeam: awayTeam,
+                isReal: true,
+                message: 'Prediction generation failed - check ML model availability'
+            };
+        }
+    }
+
+    // Get real team schedule and predictions
+    async getRealTeamSchedule(teamName, season = 2024) {
+        try {
+            const result = await this.makeAPICall('/team-schedule', {
+                teamName: teamName,
+                season: season
+            });
+
+            return {
+                games: result.games || [],
+                teamName: teamName,
+                totalGames: result.totalGames || 0,
+                season: season
+            };
+
+        } catch (error) {
+            console.error(`Failed to get schedule for ${teamName}:`, error);
+            return {
+                games: [],
+                teamName: teamName,
+                totalGames: 0,
+                season: season,
+                error: error.message
+            };
+        }
+    }
+
+    // Calculate real team-specific accuracy
+    async calculateRealTeamAccuracy(teamName, season = 2024) {
+        try {
+            const result = await this.makeAPICall('/calculate-accuracy', {
+                teamName: teamName,
+                season: season
+            });
+
+            return {
+                accuracy: result.accuracy || 0,
+                totalPredictions: result.totalPredictions || 0,
+                correctPredictions: result.correctPredictions || 0,
+                teamName: teamName,
+                season: season,
+                message: result.message || 'No team-specific accuracy data',
+                isReal: true
+            };
+
+        } catch (error) {
+            console.error(`Failed to calculate team accuracy for ${teamName}:`, error);
+            return {
+                accuracy: 0,
+                totalPredictions: 0,
+                correctPredictions: 0,
+                teamName: teamName,
+                season: season,
+                message: 'Team accuracy calculation failed',
+                error: error.message,
+                isReal: true
+            };
+        }
+    }
+
+    // Get real conferences from database
+    async getRealConferences() {
+        try {
+            const result = await this.makeAPICall('/database/teams', {
+                season: 2024
+            });
+
+            return {
+                conferences: result.conferences || [],
+                teams: result.teams || [],
+                totalTeams: result.totalTeams || 0,
+                season: result.season || 2024
+            };
+
+        } catch (error) {
+            console.error('Failed to get real conferences:', error);
+            return {
+                conferences: [],
+                teams: [],
+                totalTeams: 0,
+                season: 2024,
+                error: error.message
+            };
+        }
+    }
+
+    // Validate that we're getting real data (not mock)
+    validateRealData(data, dataType) {
+        const validationResults = {
+            isValid: true,
+            issues: [],
+            dataType: dataType
+        };
+
+        // Check for common mock data indicators
+        if (typeof data === 'object' && data !== null) {
+            // Check for hardcoded fake accuracy numbers
+            if (data.accuracy === 0.923 || data.accuracy === 92.3) {
+                validationResults.isValid = false;
+                validationResults.issues.push('Detected hardcoded 92.3% accuracy');
+            }
+
+            // Check for hardcoded team names
+            const mockTeamNames = ['Sample Team', 'Mock University', 'Test State'];
+            if (data.team && mockTeamNames.includes(data.team)) {
+                validationResults.isValid = false;
+                validationResults.issues.push('Detected mock team name');
+            }
+
+            // Check for obviously fake prediction confidence
+            if (data.confidence === 0.743 || data.confidence === 74.3) {
+                validationResults.isValid = false;
+                validationResults.issues.push('Detected hardcoded confidence level');
+            }
+
+            // Check for hardcoded data points claim
+            if (data.dataPoints === 320000 || data.totalDataPoints === 320000) {
+                validationResults.isValid = false;
+                validationResults.issues.push('Detected hardcoded 320,000 data points claim');
+            }
+        }
+
+        return validationResults;
+    }
+
+    // Health check for API availability
+    async healthCheck() {
+        try {
+            const startTime = Date.now();
+            await this.makeAPICall('/teams', {}, 'GET');
+            const responseTime = Date.now() - startTime;
+
+            return {
+                status: 'healthy',
+                responseTime: responseTime,
+                timestamp: new Date().toISOString(),
+                apiURL: this.baseURL
+            };
+
+        } catch (error) {
+            return {
+                status: 'unhealthy',
+                error: error.message,
+                timestamp: new Date().toISOString(),
+                apiURL: this.baseURL
+            };
+        }
+    }
+}
+
+// Export for use in React components
+export default RealDataAPI;
+
+// Utility functions for data validation
+export const DataValidation = {
+    isRealAccuracy: (accuracy) => {
+        // Real accuracy should be between 0 and 1, not hardcoded values
+        return typeof accuracy === 'number' && 
+               accuracy >= 0 && 
+               accuracy <= 1 && 
+               accuracy !== 0.923; // Not the fake 92.3%
+    },
+
+    isRealPrediction: (prediction) => {
+        return prediction &&
+               typeof prediction.confidence === 'number' &&
+               prediction.confidence !== 0.743 && // Not fake 74.3%
+               prediction.homeTeam &&
+               prediction.awayTeam &&
+               typeof prediction.predictedHomeScore === 'number' &&
+               typeof prediction.predictedAwayScore === 'number';
+    },
+
+    isRealTeamData: (teamData) => {
+        return teamData &&
+               teamData.school &&
+               !teamData.school.includes('Mock') &&
+               !teamData.school.includes('Sample') &&
+               typeof teamData.offensePointsPerGame === 'number';
+    },
+
+    logDataSource: (data, source) => {
+        console.log(`✅ Real Data Source: ${source}`, {
+            timestamp: new Date().toISOString(),
+            dataType: typeof data,
+            hasRealValues: data && !JSON.stringify(data).includes('mock'),
+            source: source
+        });
+    }
 };
-
-// 6. DATA VALIDATION MIDDLEWARE
-export const validateRealData = (data) => {
-  const validationRules = {
-    accuracy: (acc) => acc >= 0 && acc <= 100 && !isNaN(acc),
-    prediction: (pred) => pred.confidence > 0 && pred.calculatedAt,
-    teamStats: (stats) => stats.team && stats.prediction,
-    gameData: (game) => game.scheduledDate && game.homeTeam && game.awayTeam
-  };
-
-  return Object.keys(validationRules).every(key => {
-    if (data[key] === undefined) return true; // Optional fields
-    return validationRules[key](data[key]);
-  });
-};
-
-// 7. API INTEGRATION SETUP
-export const setupRealDataAPIs = () => {
-  const API_BASE = process.env.REACT_APP_API_BASE_URL || '/api';
-  
-  return {
-    accuracy: `${API_BASE}/accuracy/live`,
-    predictions: `${API_BASE}/predictions/upcoming`,
-    teamStats: (teamId) => `${API_BASE}/teams/${teamId}/stats`,
-    gameResults: `${API_BASE}/games/results`,
-    updateAccuracy: `${API_BASE}/accuracy/recalculate`
-  };
-};
-
-// 8. REAL-TIME ACCURACY CALCULATOR
-export const recalculateAccuracy = async () => {
-  try {
-    const response = await fetch('/api/accuracy/recalculate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-      }
-    });
-    
-    const result = await response.json();
-    
-    return {
-      newAccuracy: result.calculatedAccuracy,
-      totalPredictions: result.totalPredictions,
-      correctPredictions: result.correctPredictions,
-      lastCalculated: new Date().toISOString()
-    };
-  } catch (error) {
-    console.error('Failed to recalculate accuracy:', error);
-    return null;
-  }
-};
-
-// 9. HONEST DISCLAIMER COMPONENT
-export const AccuracyDisclaimer = ({ accuracy }) => {
-  const getDisclaimerText = (acc) => {
-    if (acc >= 90) return "Exceptional performance - past results don't guarantee future outcomes";
-    if (acc >= 80) return "Strong performance - individual game outcomes may vary";
-    if (acc >= 70) return "Good performance - use predictions as one factor in your analysis";
-    return "Performance improving - predictions are for entertainment purposes only";
-  };
-
-  return (
-    <div className="accuracy-disclaimer">
-      <p>{getDisclaimerText(accuracy)}</p>
-      <small>
-        Accuracy calculated from verified game results. 
-        Updated every game day.
-      </small>
-    </div>
-  );
-};
-
-// IMPLEMENTATION INSTRUCTIONS:
-/*
-1. Replace all hardcoded accuracy values with calculateRealAccuracy()
-2. Replace mock game data with getRealGamePredictions()
-3. Use generateRealVideoScript() for all avatar content
-4. Add AccuracyDisclaimer component to your predictions page
-5. Set up API endpoints that return real data from your database
-6. Never generate videos without validated real data
-7. Include data source timestamps in all predictions
-*/
