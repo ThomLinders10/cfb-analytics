@@ -1,0 +1,284 @@
+# 🚀 Complete Avatar Video System Deployment Guide
+
+## Quick Deploy Checklist for Saturday Launch
+
+### ⚡ Step 1: Deploy Lambda Functions (15 minutes)
+
+1. **Create the Lambda deployment package:**
+```bash
+# In your project root
+mkdir lambda-deploy
+cd lambda-deploy
+
+# Copy the avatar generator code
+cp ../path/to/avatarGenerator.js .
+cp ../path/to/package.json .
+
+# Install dependencies
+npm install
+
+# Create deployment zip
+zip -r avatar-generator.zip .
+```
+
+2. **Deploy via AWS CLI:**
+```bash
+# Create the Lambda function
+aws lambda create-function \
+  --function-name cfb-avatar-generator-prod \
+  --runtime nodejs18.x \
+  --role arn:aws:iam::YOUR-ACCOUNT:role/lambda-execution-role \
+  --handler avatarGenerator.handler \
+  --zip-file fileb://avatar-generator.zip \
+  --timeout 900 \
+  --memory-size 1024
+```
+
+3. **Set environment variables:**
+```bash
+aws lambda update-function-configuration \
+  --function-name cfb-avatar-generator-prod \
+  --environment Variables='{
+    "OPENAI_API_KEY":"your-openai-key",
+    "ELEVENLABS_API_KEY":"your-elevenlabs-key",
+    "HEYGEN_API_KEY":"your-heygen-key",
+    "TABLE_NAME":"CFBTeamStats-dev",
+    "S3_BUCKET":"cfb-analytics-videos-prod",
+    "BOB_VOICE_ID":"voice-id-from-elevenlabs",
+    "TONY_VOICE_ID":"voice-id-from-elevenlabs",
+    "RITA_VOICE_ID":"voice-id-from-elevenlabs",
+    "BOB_HEYGEN_ID":"avatar-id-from-heygen",
+    "TONY_HEYGEN_ID":"avatar-id-from-heygen",
+    "RITA_HEYGEN_ID":"avatar-id-from-heygen"
+  }'
+```
+
+### ⚡ Step 2: Create S3 Bucket & CloudFront (10 minutes)
+
+1. **Create S3 bucket:**
+```bash
+aws s3 mb s3://cfb-analytics-videos-prod
+aws s3api put-bucket-cors --bucket cfb-analytics-videos-prod --cors-configuration file://cors.json
+```
+
+2. **Create CloudFront distribution:**
+```bash
+aws cloudfront create-distribution --distribution-config file://cloudfront-config.json
+```
+
+### ⚡ Step 3: Set Up Monday Automation (5 minutes)
+
+```bash
+# Create EventBridge rule for Monday 6 AM
+aws events put-rule \
+  --name cfb-monday-video-generation \
+  --schedule-expression "cron(0 6 ? * MON *)" \
+  --state ENABLED
+
+# Add Lambda target
+aws events put-targets \
+  --rule cfb-monday-video-generation \
+  --targets "Id"="1","Arn"="arn:aws:lambda:us-east-1:YOUR-ACCOUNT:function:cfb-avatar-generator-prod","Input"='{"action":"generateAll"}'
+
+# Grant permission
+aws lambda add-permission \
+  --function-name cfb-avatar-generator-prod \
+  --statement-id monday-video-trigger \
+  --action lambda:InvokeFunction \
+  --principal events.amazonaws.com
+```
+
+### ⚡ Step 4: Update Amplify Environment Variables (2 minutes)
+
+**In AWS Amplify Console:**
+1. Go to your app → Environment variables
+2. Add these variables:
+```
+REACT_APP_VIDEO_CDN_URL = https://your-cloudfront-domain.cloudfront.net
+REACT_APP_VIDEO_API_URL = https://your-api-gateway-url/prod
+REACT_APP_AWS_REGION = us-east-1
+```
+
+### ⚡ Step 5: Deploy Frontend Updates (5 minutes)
+
+1. **Update your React components:**
+```bash
+# Replace BroadcastBooth component with video integration
+cp frontend-video-integration/BroadcastBooth.js src/Components/
+
+# Replace TeamPage component  
+cp frontend-video-integration/TeamPage.js src/Components/
+
+# Add video styles to App.css
+cat frontend-video-integration/video-styles.css >> src/App.css
+```
+
+2. **Push to Amplify:**
+```bash
+git add .
+git commit -m "Add avatar video integration"
+git push origin main
+```
+
+## 🧪 Testing Your Avatar System
+
+### Test 1: Generate Homepage Video
+```bash
+# Manual test via AWS CLI
+aws lambda invoke \
+  --function-name cfb-avatar-generator-prod \
+  --payload '{"action":"generateHomepage"}' \
+  response.json
+
+cat response.json
+```
+
+### Test 2: Generate Team Video
+```bash
+# Test with Iowa State
+aws lambda invoke \
+  --function-name cfb-avatar-generator-prod \
+  --payload '{"action":"generateTeam","teamName":"Iowa State"}' \
+  response.json
+
+cat response.json
+```
+
+### Test 3: Check Video Availability
+```bash
+# Verify video uploaded to S3
+aws s3 ls s3://cfb-analytics-videos-prod/homepage/
+aws s3 ls s3://cfb-analytics-videos-prod/teams/iowa-state/
+```
+
+## 🎬 Generate All Initial Videos
+
+### Option A: Generate All Teams (Production)
+```bash
+# This will take 2-3 hours for all 130+ teams
+aws lambda invoke \
+  --function-name cfb-avatar-generator-prod \
+  --payload '{"action":"generateAll"}' \
+  --cli-read-timeout 0 \
+  response.json
+```
+
+### Option B: Generate Specific Teams (Testing)
+```bash
+# Generate just a few teams for testing
+teams=("Alabama" "Georgia" "Ohio State" "Michigan" "Texas")
+
+for team in "${teams[@]}"; do
+  echo "Generating video for $team..."
+  aws lambda invoke \
+    --function-name cfb-avatar-generator-prod \
+    --payload "{\"action\":\"generateTeam\",\"teamName\":\"$team\"}" \
+    response-$team.json
+  
+  echo "Response for $team:"
+  cat response-$team.json
+  echo "---"
+done
+```
+
+## 🔧 Troubleshooting
+
+### Common Issues:
+
+**1. Lambda Timeout:**
+```bash
+# Increase timeout to 15 minutes
+aws lambda update-function-configuration \
+  --function-name cfb-avatar-generator-prod \
+  --timeout 900
+```
+
+**2. Memory Issues:**
+```bash
+# Increase memory
+aws lambda update-function-configuration \
+  --function-name cfb-avatar-generator-prod \
+  --memory-size 1024
+```
+
+**3. API Rate Limits:**
+- HeyGen: 10 concurrent requests max
+- ElevenLabs: Check your monthly character limit
+- OpenAI: 3,500 requests/minute for GPT-4
+
+**4. Video Not Loading:**
+```bash
+# Check S3 permissions
+aws s3api get-bucket-policy --bucket cfb-analytics-videos-prod
+
+# Check CloudFront status
+aws cloudfront get-distribution --id YOUR-DISTRIBUTION-ID
+```
+
+### Debug Lambda Function:
+```bash
+# View logs
+aws logs describe-log-groups --log-group-name-prefix /aws/lambda/cfb-avatar-generator
+
+# Get recent logs
+aws logs filter-log-events \
+  --log-group-name /aws/lambda/cfb-avatar-generator-prod \
+  --start-time $(date -d '1 hour ago' +%s)000
+```
+
+## 📊 Monitoring & Costs
+
+### Set Up Monitoring:
+```bash
+# Create CloudWatch alarm for errors
+aws cloudwatch put-metric-alarm \
+  --alarm-name cfb-avatar-errors \
+  --alarm-description "Avatar generation errors" \
+  --metric-name Errors \
+  --namespace AWS/Lambda \
+  --statistic Sum \
+  --period 300 \
+  --threshold 1 \
+  --comparison-operator GreaterThanOrEqualToThreshold \
+  --dimensions Name=FunctionName,Value=cfb-avatar-generator-prod
+```
+
+### Cost Estimation (Monthly):
+- **HeyGen**: ~$0.30 per minute of video = $390 for 130 teams (10 min each)
+- **ElevenLabs**: ~$0.24 per 1K characters = $50 for all scripts
+- **OpenAI**: ~$30 for GPT-4 script generation
+- **AWS Lambda**: ~$5 for compute time
+- **S3/CloudFront**: ~$10 for storage/delivery
+
+**Total estimated cost: ~$485/month**
+
+## 🎯 Launch Day Checklist
+
+### Before Going Live:
+- [ ] Homepage video generated and displaying
+- [ ] Test 3-5 team videos working
+- [ ] CloudFront distribution active
+- [ ] Monday automation scheduled
+- [ ] All environment variables set
+- [ ] Frontend components updated
+- [ ] Error monitoring configured
+
+### Day 1 Actions:
+1. **Generate homepage video** (5 minutes)
+2. **Generate top 25 team videos** (2 hours)
+3. **Test user experience** on mobile/desktop
+4. **Monitor Lambda logs** for errors
+5. **Check video loading times**
+
+### Week 1 Actions:
+1. **Generate remaining team videos** (batch process)
+2. **Test Monday automation** 
+3. **Monitor costs and usage**
+4. **Optimize video sizes** if needed
+5. **Add more teams** as needed
+
+## 🚀 You're Ready to Launch!
+
+Your avatar video system is now fully automated and ready for production. Every Monday at 6 AM, fresh content will be generated automatically, and users will get personalized video experiences when they click on teams.
+
+**The future of college sports predictions starts now!** 🏈🎬

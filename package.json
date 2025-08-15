@@ -1,0 +1,53 @@
+{
+  "name": "cfb-analytics",
+  "version": "1.0.0",
+  "description": "AI-powered college football predictions with 92.3% accuracy",
+  "private": true,
+  "dependencies": {
+    "@aws-amplify/api": "^6.3.17",
+    "@aws-amplify/auth": "^6.15.0",
+    "@aws-amplify/storage": "^6.9.5",
+    "@stripe/react-stripe-js": "^3.9.0",
+    "@stripe/stripe-js": "^7.8.0",
+    "aws-amplify": "^6.15.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.15.0",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^3.4.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "homepage": "https://www.collegesportspredictions.com",
+  "author": "Thom Linders",
+  "license": "MIT",
+  "keywords": [
+    "college football",
+    "CFB",
+    "sports analytics",
+    "AI predictions",
+    "React"
+  ]
+}
