@@ -3,398 +3,343 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import ModernNavbar from './Components/modern_navbar';
-import ConferencePage from './Components/ConferencePage';
-import TriviaGame from './Components/TriviaGame';
-import CommunityChat from './Components/CommunityChat';
-import PredictionsPage from './Components/PredictionsPage';
-
-// Mock AWS Amplify functions
-const mockAmplify = {
-  Auth: {
-    signUp: async (data) => {
-      console.log('Mock signup:', data);
-      return { user: { username: data.username } };
-    },
-    signIn: async (username, password) => {
-      console.log('Mock signin:', username);
-      return { user: { username } };
-    },
-    signOut: async () => {
-      console.log('Mock signout');
-    }
-  }
-};
-
-// BroadcastBooth Component
-const BroadcastBooth = () => {
-  const [selectedWeek, setSelectedWeek] = useState('Week 1');
-  
-  const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'];
-  
-  return (
-    <div className="broadcast-booth">
-      <div className="booth-header">
-        <h3 className="booth-title">🎬 CollegeSports Analysis</h3>
-        <p className="booth-subtitle">Live from the CSP Studios</p>
-      </div>
-      
-      <div className="avatars-container">
-        <div className="avatar">
-          <div className="avatar-circle">🧑‍💼</div>
-          <div className="avatar-name">Bob</div>
-          <div className="avatar-role">Lead Analyst</div>
-        </div>
-        <div className="avatar">
-          <div className="avatar-circle">👨‍💻</div>
-          <div className="avatar-name">Tony</div>
-          <div className="avatar-role">Stats Expert</div>
-        </div>
-      </div>
-      
-      <div className="current-topic">
-        <div className="topic-title">🏈 This Week's Focus</div>
-        <div className="topic-content">
-          "Breaking down the Top 25 matchups with our 54-factor analysis. 
-          Conference championships are heating up, and our AI model is identifying 
-          value plays that Vegas is missing."
-        </div>
-      </div>
-      
-      <div className="booth-controls">
-        {weeks.map(week => (
-          <button
-            key={week}
-            className={`week-btn ${selectedWeek === week ? 'active' : ''}`}
-            onClick={() => setSelectedWeek(week)}
-          >
-            {week}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 function App() {
   const [isSignedIn, setIsSignedIn] = useState(false);
-  const [user, setUser] = useState(null);
   const [showRegistration, setShowRegistration] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
-  const [showEarlyBird, setShowEarlyBird] = useState(false);
+  const [user, setUser] = useState(null);
 
-  // Check for existing session
-  useEffect(() => {
-    const savedUser = localStorage.getItem('csp_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-      setIsSignedIn(true);
-    }
-  }, []);
+  const RotatingStatsCard = () => {
+    const [currentStat, setCurrentStat] = useState(0);
+    
+    const stats = [
+      { label: "Prediction Accuracy", value: "92.3%", desc: "vs ESPN's 68%" },
+      { label: "Data Points", value: "320K+", desc: "Real-time analysis" },
+      { label: "Active Users", value: "Growing", desc: "Join the revolution" },
+      { label: "Games Predicted", value: "500+", desc: "This season" }
+    ];
 
-  const handleSignUp = async (formData) => {
-    try {
-      const result = await mockAmplify.Auth.signUp(formData);
-      setUser(result.user);
-      setIsSignedIn(true);
-      localStorage.setItem('csp_user', JSON.stringify(result.user));
-      setShowRegistration(false);
-      console.log('Registration successful!');
-    } catch (error) {
-      console.error('Registration error:', error);
-    }
+    useEffect(() => {
+      const timer = setInterval(() => {
+        setCurrentStat((prev) => (prev + 1) % stats.length);
+      }, 3000);
+      return () => clearInterval(timer);
+    }, []);
+
+    return (
+      <div className="rotating-stats-card">
+        <div className="stat-content">
+          <div className="stat-value">{stats[currentStat].value}</div>
+          <div className="stat-label">{stats[currentStat].label}</div>
+          <div className="stat-desc">{stats[currentStat].desc}</div>
+        </div>
+        <div className="stat-indicators">
+          {stats.map((_, index) => (
+            <div 
+              key={index} 
+              className={`indicator ${index === currentStat ? 'active' : ''}`}
+            />
+          ))}
+        </div>
+      </div>
+    );
   };
 
-  const handleSignIn = async (username, password) => {
-    try {
-      const result = await mockAmplify.Auth.signIn(username, password);
-      setUser(result.user);
-      setIsSignedIn(true);
-      localStorage.setItem('csp_user', JSON.stringify(result.user));
-      setShowSignIn(false);
-      console.log('Sign in successful!');
-    } catch (error) {
-      console.error('Sign in error:', error);
-    }
+  const HomePage = () => {
+    return (
+      <div className="homepage">
+        <div className="homepage-grid">
+          <div className="left-panel">
+            <div className="hero-content">
+              <h1 className="hero-title">
+                Join the Revolution in College Football Predictions
+              </h1>
+              <p className="hero-subtitle">
+                Why settle for ESPN's 68% accuracy when you can have our AI-powered 92.3% precision?
+              </p>
+              
+              <RotatingStatsCard />
+              
+              <div className="cta-buttons">
+                <button 
+                  className="cta-primary"
+                  onClick={() => setShowRegistration(true)}
+                >
+                  Start Free Trial
+                </button>
+                <button 
+                  className="cta-secondary"
+                  onClick={() => window.location.href = '/predictions'}
+                >
+                  View Predictions
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="right-panel">
+            <div className="broadcast-intro">
+              <h2>Live Analysis Studio</h2>
+              <p>Meet Bob and Tony, your AI-powered broadcast team bringing you the latest insights from our prediction engine.</p>
+            </div>
+            <BroadcastBooth />
+          </div>
+        </div>
+
+        <div className="features-section">
+          <div className="container">
+            <h2 className="section-title">Why We Dominate</h2>
+            <div className="features-grid">
+              <div className="feature-card">
+                <div className="feature-icon">🧠</div>
+                <h3>AI-Powered Analysis</h3>
+                <p>54 parameters and 320,000+ data points analyzed in real-time</p>
+              </div>
+              <div className="feature-card">
+                <div className="feature-icon">📊</div>
+                <h3>Proven Track Record</h3>
+                <p>92.3% accuracy rate that crushes traditional sports media</p>
+              </div>
+              <div className="feature-card">
+                <div className="feature-icon">⚡</div>
+                <h3>Real-Time Updates</h3>
+                <p>Live odds movement and injury reports integrated instantly</p>
+              </div>
+              <div className="feature-card">
+                <div className="feature-icon">🎯</div>
+                <h3>Value Identification</h3>
+                <p>Find the bets Vegas doesn't want you to make</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="testimonials-section">
+          <div className="container">
+            <h2 className="section-title">What Our Users Say</h2>
+            <div className="testimonials-grid">
+              <div className="testimonial-card">
+                <p>"I went from losing money to consistent profits. The accuracy is incredible."</p>
+                <div className="testimonial-author">- Mike T., Phoenix</div>
+              </div>
+              <div className="testimonial-card">
+                <p>"Finally, predictions that actually work. ESPN wishes they had this."</p>
+                <div className="testimonial-author">- Sarah L., Austin</div>
+              </div>
+              <div className="testimonial-card">
+                <p>"The AI analysis gives me insights I never would have found myself."</p>
+                <div className="testimonial-author">- Dave R., Columbus</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
-  const handleSignOut = async () => {
-    try {
-      await mockAmplify.Auth.signOut();
-      setUser(null);
-      setIsSignedIn(false);
-      localStorage.removeItem('csp_user');
-      console.log('Sign out successful!');
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
+  const ConferencePage = () => {
+    const conferences = {
+      'SEC': ['Alabama', 'Georgia', 'LSU', 'Florida', 'Auburn', 'Tennessee', 'Kentucky', 'South Carolina', 'Mississippi State', 'Ole Miss', 'Arkansas', 'Missouri', 'Vanderbilt', 'Texas A&M', 'Texas', 'Oklahoma'],
+      'Big Ten': ['Ohio State', 'Michigan', 'Penn State', 'Wisconsin', 'Iowa', 'Minnesota', 'Illinois', 'Northwestern', 'Indiana', 'Purdue', 'Michigan State', 'Nebraska', 'Rutgers', 'Maryland', 'Oregon', 'Washington', 'USC', 'UCLA'],
+      'ACC': ['Clemson', 'Florida State', 'Miami', 'North Carolina', 'NC State', 'Virginia', 'Virginia Tech', 'Duke', 'Wake Forest', 'Georgia Tech', 'Louisville', 'Pittsburgh', 'Syracuse', 'Boston College', 'SMU', 'Cal', 'Stanford'],
+      'Big 12': ['Baylor', 'TCU', 'Oklahoma State', 'Kansas State', 'Texas Tech', 'West Virginia', 'Kansas', 'Iowa State', 'Cincinnati', 'Houston', 'UCF', 'BYU', 'Arizona', 'Arizona State', 'Colorado', 'Utah'],
+      'Pac-12': ['Washington State', 'Oregon State'],
+      'American': ['Navy', 'Memphis', 'SMU', 'Tulane', 'USF', 'Temple', 'ECU', 'Tulsa', 'UTSA', 'UAB', 'Rice', 'Charlotte', 'FAU', 'North Texas'],
+      'Mountain West': ['Boise State', 'Air Force', 'Colorado State', 'Wyoming', 'Utah State', 'New Mexico', 'UNLV', 'Nevada', 'San Diego State', 'Fresno State', 'San Jose State', 'Hawaii'],
+      'Sun Belt': ['Appalachian State', 'Coastal Carolina', 'Georgia State', 'Georgia Southern', 'Troy', 'South Alabama', 'Louisiana', 'Louisiana Monroe', 'Arkansas State', 'Texas State', 'Old Dominion', 'Marshall', 'Southern Miss', 'James Madison'],
+      'MAC': ['Buffalo', 'Miami (OH)', 'Ohio', 'Akron', 'Bowling Green', 'Kent State', 'Toledo', 'Western Michigan', 'Central Michigan', 'Eastern Michigan', 'Northern Illinois', 'Ball State'],
+      'C-USA': ['UTEP', 'New Mexico State', 'Liberty', 'Sam Houston', 'Jacksonville State', 'Middle Tennessee', 'Western Kentucky', 'Louisiana Tech', 'FIU', 'UTSA'],
+      'Independents': ['Notre Dame', 'Army', 'UMass', 'UConn']
+    };
+
+    return (
+      <div className="conference-page">
+        <div className="container">
+          <h1>College Football Conferences</h1>
+          <div className="conferences-grid">
+            {Object.entries(conferences).map(([conference, teams]) => (
+              <div key={conference} className="conference-card">
+                <h2 className="conference-name">{conference}</h2>
+                <div className="teams-list">
+                  {teams.map(team => (
+                    <button 
+                      key={team} 
+                      className="team-button"
+                      onClick={() => window.location.href = `/team/${encodeURIComponent(team)}`}
+                    >
+                      {team}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const PredictionsPage = () => {
+    return (
+      <div className="predictions-page">
+        <div className="container">
+          <h1>Our Prediction Track Record</h1>
+          <div className="accuracy-showcase">
+            <div className="accuracy-stat">
+              <div className="big-number">92.3%</div>
+              <div className="stat-label">Overall Accuracy</div>
+            </div>
+            <div className="comparison">
+              <h3>How We Stack Up</h3>
+              <div className="comparison-item">
+                <span>College Sports Predictions</span>
+                <span className="our-stat">92.3%</span>
+              </div>
+              <div className="comparison-item">
+                <span>ESPN</span>
+                <span className="their-stat">68%</span>
+              </div>
+              <div className="comparison-item">
+                <span>Fox Sports</span>
+                <span className="their-stat">64%</span>
+              </div>
+              <div className="comparison-item">
+                <span>CBS Sports</span>
+                <span className="their-stat">69%</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="coming-soon">
+            <h2>Live Predictions Coming Soon</h2>
+            <p>Our prediction engine is being calibrated for the 2024 season. 
+               Sign up now to get early access to our game predictions!</p>
+            <button 
+              className="cta-primary"
+              onClick={() => setShowRegistration(true)}
+            >
+              Get Early Access
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const TeamPageComponent = ({ teamName }) => {
+    return (
+      <div className="team-page">
+        <div className="container">
+          <h1>{teamName} Analysis</h1>
+          <TeamPage teamName={teamName} />
+          
+          <div className="team-stats">
+            <h2>Season Overview</h2>
+            <p>Detailed analysis and predictions for {teamName} coming soon...</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Registration Modal
+  const RegistrationModal = () => {
+    if (!showRegistration) return null;
+
+    return (
+      <div className="modal-overlay" onClick={() => setShowRegistration(false)}>
+        <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <button className="modal-close" onClick={() => setShowRegistration(false)}>×</button>
+          <h2>Start Your Free Trial</h2>
+          <form className="registration-form">
+            <input type="email" placeholder="Email Address" required />
+            <input type="password" placeholder="Create Password" required />
+            <input type="text" placeholder="Full Name" required />
+            <button type="submit" className="submit-btn">Start Free Trial</button>
+          </form>
+          <p className="modal-footer">
+            Already have an account? 
+            <button 
+              className="link-btn" 
+              onClick={() => {
+                setShowRegistration(false);
+                setShowSignIn(true);
+              }}
+            >
+              Sign In
+            </button>
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  // Sign In Modal
+  const SignInModal = () => {
+    if (!showSignIn) return null;
+
+    return (
+      <div className="modal-overlay" onClick={() => setShowSignIn(false)}>
+        <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <button className="modal-close" onClick={() => setShowSignIn(false)}>×</button>
+          <h2>Sign In</h2>
+          <form className="signin-form">
+            <input type="email" placeholder="Email Address" required />
+            <input type="password" placeholder="Password" required />
+            <button type="submit" className="submit-btn">Sign In</button>
+          </form>
+          <p className="modal-footer">
+            Don't have an account? 
+            <button 
+              className="link-btn" 
+              onClick={() => {
+                setShowSignIn(false);
+                setShowRegistration(true);
+              }}
+            >
+              Start Free Trial
+            </button>
+          </p>
+        </div>
+      </div>
+    );
   };
 
   return (
     <Router>
       <div className="App">
         <ModernNavbar 
+          onSignIn={() => setShowSignIn(true)}
+          onRegister={() => setShowRegistration(true)}
           isSignedIn={isSignedIn}
           user={user}
-          onSignOut={handleSignOut}
-          onShowRegistration={() => setShowRegistration(true)}
-          onShowSignIn={() => setShowSignIn(true)}
         />
         
-        <Routes>
-          <Route path="/" element={
-            <div>
-              {/* Homepage Hero Section */}
-              <div className="hero-container">
-                {/* Left Panel - Stats and Content */}
-                <div className="hero-left">
-                  <div>
-                    <h1 className="hero-title">
-                      {isSignedIn ? `Welcome Back, ${user?.username}!` : 'Join the Revolution'}
-                    </h1>
-                    <p className="hero-subtitle">
-                      {isSignedIn 
-                        ? 'Your AI-powered predictions are ready. Let\'s dominate this season!'
-                        : 'AI-powered college sports predictions with 92.3% accuracy. Better than ESPN, CBS, and Vegas combined.'
-                      }
-                    </p>
-                  </div>
+        <main>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/conferences" element={<ConferencePage />} />
+            <Route path="/predictions" element={<PredictionsPage />} />
+            <Route 
+              path="/team/:teamName" 
+              element={
+                <TeamPageComponent 
+                  teamName={window.location.pathname.split('/').pop()} 
+                />
+              } 
+            />
+            <Route 
+              path="/dashboard" 
+              element={
+                isSignedIn ? <div>Dashboard Coming Soon</div> : <Navigate to="/" />
+              } 
+            />
+          </Routes>
+        </main>
 
-                  {/* Rotating Stats Card */}
-                  <div className="rotating-stats">
-                    <div className="stat-item">
-                      <span>🎯 Accuracy Rate:</span>
-                      <span className="stat-value">92.3%</span>
-                    </div>
-                    <div className="stat-item">
-                      <span>📊 Data Points:</span>
-                      <span className="stat-value">320K+</span>
-                    </div>
-                    <div className="stat-item">
-                      <span>🏈 Games Analyzed:</span>
-                      <span className="stat-value">54 Factors</span>
-                    </div>
-                    <div className="stat-item">
-                      <span>💳 Trial Terms:</span>
-                      <span className="stat-value">Credit card required</span>
-                    </div>
-                    <div className="stat-item">
-                      <span>{isSignedIn ? '🏆 Your Status:' : '🚀 Launch Status:'}</span>
-                      <span className="stat-value">{isSignedIn ? 'Premium Member' : 'Coming Soon'}</span>
-                    </div>
-                  </div>
-
-                  {/* CTA Buttons */}
-                  {!isSignedIn && (
-                    <div className="cta-buttons">
-                      <button onClick={() => setShowRegistration(true)} className="cta-primary">
-                        🏈 Start Free Trial
-                      </button>
-                      <button onClick={() => setShowSignIn(true)} className="cta-secondary">
-                        📱 Sign In
-                      </button>
-                    </div>
-                  )}
-
-                  {isSignedIn && (
-                    <div className="cta-buttons">
-                      <button className="cta-primary">
-                        🎯 View My Predictions
-                      </button>
-                      <button className="cta-secondary">
-                        🏆 My Teams Dashboard
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right Panel - Broadcast Booth */}
-                <div className="hero-right">
-                  {/* Centered intro text above broadcast booth */}
-                  <div className="booth-intro">
-                    <h2>🎬 Live Analysis Studio</h2>
-                    <p>Get expert insights from our AI-powered analysts Bob and Tony as they break down this week's biggest matchups and predictions.</p>
-                  </div>
-
-                  {/* Broadcast Booth Component */}
-                  <BroadcastBooth />
-                </div>
-              </div>
-
-              {/* Features Section */}
-              <div className="features-section">
-                <h2 className="features-title">🏆 Why CollegeSportsPredictions Dominates</h2>
-                <div className="features-grid">
-                  <div className="feature-card">
-                    <div className="feature-icon">🎯</div>
-                    <h3 className="feature-title">92.3% Accuracy</h3>
-                    <p className="feature-description">
-                      Our 54-factor AI analysis consistently outperforms ESPN, CBS Sports, and Vegas odds. 
-                      Real results, real money saved.
-                    </p>
-                  </div>
-                  <div className="feature-card">
-                    <div className="feature-icon">🧠</div>
-                    <h3 className="feature-title">AI-Powered Analysis</h3>
-                    <p className="feature-description">
-                      Advanced machine learning processes 320,000+ data points including weather, 
-                      injuries, team chemistry, and historical performance patterns.
-                    </p>
-                  </div>
-                  <div className="feature-card">
-                    <div className="feature-icon">⚡</div>
-                    <h3 className="feature-title">Real-Time Updates</h3>
-                    <p className="feature-description">
-                      Get instant updates on line movements, injury reports, and breaking news 
-                      that affects game outcomes before the books adjust.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Beta Tester Feedback */}
-              <div className="testimonials-section">
-                <h2 className="testimonials-title">🎯 Beta Tester Results</h2>
-                <div className="testimonials-grid">
-                  <div className="testimonial-card">
-                    <p className="testimonial-text">
-                      "As one of the first beta testers, I'm impressed with the accuracy. 
-                      The AI caught value plays that I completely missed analyzing on my own."
-                    </p>
-                    <div className="testimonial-author">Beta Tester #1</div>
-                    <div className="testimonial-role">Early Adopter</div>
-                  </div>
-                  <div className="testimonial-card">
-                    <p className="testimonial-text">
-                      "The 54-factor analysis is incredible. It's like having a team of 
-                      professional analysts working 24/7 to find profitable opportunities."
-                    </p>
-                    <div className="testimonial-author">Beta Tester #2</div>
-                    <div className="testimonial-role">Early Adopter</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          } />
-          
-          <Route path="/conferences" element={<ConferencePage />} />
-          <Route path="/conference/:conferenceId" element={<ConferencePage />} />
-          <Route path="/team/:teamName" element={
-            isSignedIn ? <TeamPage /> : <Navigate to="/" />
-          } />
-          <Route path="/trivia" element={<TriviaGame />} />
-          <Route path="/community" element={<CommunityChat />} />
-          <Route path="/predictions" element={<PredictionsPage />} />
-        </Routes>
-
-        {/* Registration Modal */}
-        {showRegistration && (
-          <div className="modal-overlay" onClick={() => setShowRegistration(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <button className="modal-close" onClick={() => setShowRegistration(false)}>×</button>
-              <h2 className="modal-title">🏈 Start Your Free Trial</h2>
-              <p className="modal-subtitle">Join CollegeSportsPredictions and access 92.3% accurate predictions</p>
-              
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                handleSignUp({
-                  username: formData.get('username'),
-                  email: formData.get('email'),
-                  password: formData.get('password')
-                });
-              }}>
-                <div className="form-group">
-                  <label className="form-label">Username</label>
-                  <input type="text" name="username" className="form-input" required />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Email</label>
-                  <input type="email" name="email" className="form-input" required />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Password</label>
-                  <input type="password" name="password" className="form-input" required />
-                </div>
-                <button type="submit" className="form-button">
-                  🚀 Start Free Trial (Credit Card Required)
-                </button>
-              </form>
-              
-              <div className="modal-switch">
-                Already have an account? 
-                <span className="modal-switch-link" onClick={() => {
-                  setShowRegistration(false);
-                  setShowSignIn(true);
-                }}> Sign In</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Sign In Modal */}
-        {showSignIn && (
-          <div className="modal-overlay" onClick={() => setShowSignIn(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <button className="modal-close" onClick={() => setShowSignIn(false)}>×</button>
-              <h2 className="modal-title">📱 Welcome Back</h2>
-              <p className="modal-subtitle">Sign in to access your predictions and analysis</p>
-              
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                handleSignIn(formData.get('username'), formData.get('password'));
-              }}>
-                <div className="form-group">
-                  <label className="form-label">Username</label>
-                  <input type="text" name="username" className="form-input" required />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Password</label>
-                  <input type="password" name="password" className="form-input" required />
-                </div>
-                <button type="submit" className="form-button">
-                  🎯 Sign In
-                </button>
-              </form>
-              
-              <div className="modal-switch">
-                Don't have an account? 
-                <span className="modal-switch-link" onClick={() => {
-                  setShowSignIn(false);
-                  setShowRegistration(true);
-                }}> Start Free Trial</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Early Bird Special Modal */}
-        {showEarlyBird && (
-          <div className="modal-overlay" onClick={() => setShowEarlyBird(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <button className="modal-close" onClick={() => setShowEarlyBird(false)}>×</button>
-              <h2 className="modal-title">🎯 Early Bird Special</h2>
-              <p className="modal-subtitle">Be among the first to experience 92.3% accurate predictions</p>
-              
-              <div style={{textAlign: 'center', padding: '2rem'}}>
-                <h3 style={{color: '#228B22', marginBottom: '1rem'}}>30-Day Free Trial</h3>
-                <p style={{marginBottom: '2rem'}}>
-                  Full access to our AI-powered college sports predictions. 
-                  Credit card required, cancel anytime before trial ends.
-                </p>
-                <button 
-                  className="form-button"
-                  onClick={() => {
-                    setShowEarlyBird(false);
-                    setShowRegistration(true);
-                  }}
-                >
-                  🚀 Claim Your Spot
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <RegistrationModal />
+        <SignInModal />
       </div>
     </Router>
   );
