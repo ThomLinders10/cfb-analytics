@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import './App.css';
 import ModernNavbar from './Components/modern_navbar';
 import ConferencePage from './Components/ConferencePage';
-import TeamPage from './Components/TeamPage';
 import TriviaGame from './Components/TriviaGame';
 import CommunityChat from './Components/CommunityChat';
 import PredictionsPage from './Components/PredictionsPage';
