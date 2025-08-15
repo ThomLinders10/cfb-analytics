@@ -1,10 +1,13 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ModernNavbar from './Components/modern_navbar';
-import HomePage from './components/HomePage';
-import ConferencePage from './components/ConferencePage';
-import TeamPage from './components/TeamPage';
-import PredictionsPage from './components/PredictionsPage';
+import ConferencePage from './Components/ConferencePage';
+import TeamPage from './Components/TeamPage';
+import PredictionsPage from './Components/PredictionsPage';
+import AuthModal from './Components/AuthModal';
+import { BroadcastBooth, TeamPage as VideoTeamPage } from './Components/VideoSystem/VideoComponents';
+import './App.css';
+import HomePage from './Components/HomePage';
 
 function App() {
   return (
