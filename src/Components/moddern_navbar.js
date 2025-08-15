@@ -1,116 +1,60 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import './modern_navbar.css';
+import { Link, useLocation } from 'react-router-dom';
+import AuthModal from './AuthModal';
 
-const Navbar = ({ user, onShowRegistration, onShowSubscription, onShowSignIn }) => {
-  const [showConferenceDropdown, setShowConferenceDropdown] = useState(false);
-  const navigate = useNavigate();
+const ModernNavbar = () => {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState('signin');
+  const location = useLocation();
 
-  const conferences = {
-    'Power 4': ['SEC', 'Big Ten', 'Big 12', 'ACC'],
-    'Group of 5': ['American', 'Mountain West', 'MAC', 'Sun Belt', 'Conference USA'],
-    'FCS': ['Big Sky', 'CAA', 'MVFC', 'Southern', 'Southland']
+  const openSignInModal = () => {
+    setAuthModalTab('signin');
+    setIsAuthModalOpen(true);
   };
 
-  const handleStartTrial = () => {
-    if (onShowRegistration) {
-      onShowRegistration();
-    }
-  };
-
-  const handleSignIn = () => {
-    if (onShowSignIn) {
-      onShowSignIn();
-    }
+  const openSignUpModal = () => {
+    setAuthModalTab('signup');
+    setIsAuthModalOpen(true);
   };
 
   return (
-    <nav className="modern-navbar">
-      <div className="navbar-container">
-        {/* Left: Brand */}
-        <div className="navbar-brand">
-          <Link to="/" className="brand-link">
-            <span className="brand-icon">🏈</span>
-            <span className="brand-text">CFB Analytics</span>
+    <>
+      <nav className="modern-navbar">
+        <div className="navbar-container">
+          <Link to="/" className="navbar-brand">
+            <h2>College Football Predictions</h2>
           </Link>
-        </div>
 
-        {/* Center: Navigation Links */}
-        <div className="navbar-nav">
-          <Link to="/" className="nav-link">Home</Link>
-          
-          <div 
-            className="nav-dropdown"
-            onMouseEnter={() => setShowConferenceDropdown(true)}
-            onMouseLeave={() => setShowConferenceDropdown(false)}
-          >
-            <span className="nav-link dropdown-trigger">
-              Conferences <span className="dropdown-arrow">▼</span>
-            </span>
-            {showConferenceDropdown && (
-              <div className="dropdown-menu">
-                {Object.entries(conferences).map(([division, confList]) => (
-                  <div key={division} className="dropdown-section">
-                    <div className="dropdown-header">{division}</div>
-                    {confList.map(conf => (
-                      <Link 
-                        key={conf}
-                        to={`/conference/${conf.toLowerCase().replace(' ', '-')}`}
-                        className="dropdown-item"
-                        onClick={() => setShowConferenceDropdown(false)}
-                      >
-                        {conf}
-                      </Link>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
+          <div className="navbar-menu">
+            <Link to="/" className={location.pathname === '/' ? 'active' : ''}>
+              Home
+            </Link>
+            <Link to="/conferences" className={location.pathname === '/conferences' ? 'active' : ''}>
+              Conferences
+            </Link>
+            <Link to="/predictions" className={location.pathname === '/predictions' ? 'active' : ''}>
+              Predictions
+            </Link>
           </div>
 
-          <Link to="/community" className="nav-link">Community</Link>
-          <Link to="/trivia" className="nav-link">Trivia</Link>
-          <span 
-            className="nav-link" 
-            onClick={() => onShowSubscription && onShowSubscription()}
-          >
-            Predictions
-          </span>
+          <div className="navbar-auth">
+            <button className="sign-in-btn" onClick={openSignInModal}>
+              Sign In
+            </button>
+            <button className="sign-up-btn" onClick={openSignUpModal}>
+              Sign Up
+            </button>
+          </div>
         </div>
+      </nav>
 
-        {/* Right: User Actions */}
-        <div className="navbar-actions">
-          {user ? (
-            <div className="user-menu">
-              <span className="user-welcome">Welcome, {user.name || user.email}</span>
-              <button className="btn-primary" onClick={() => onShowSubscription && onShowSubscription()}>
-                My Account
-              </button>
-            </div>
-          ) : (
-            <div className="auth-buttons">
-              <button className="btn-secondary" onClick={handleSignIn}>
-                Sign In
-              </button>
-              <button className="btn-primary" onClick={handleStartTrial}>
-                Start Free Trial
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Accuracy Banner */}
-      <div className="accuracy-banner">
-        <div className="banner-content">
-          <span className="banner-text">
-            🎯 <strong>92.3% Accuracy</strong> • Better than ESPN, CBS, and Vegas • 
-            <span className="banner-highlight">30-Day Free Trial</span>
-          </span>
-        </div>
-      </div>
-    </nav>
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)}
+        initialTab={authModalTab}
+      />
+    </>
   );
 };
 
-export default Navbar;
+export default ModernNavbar;
