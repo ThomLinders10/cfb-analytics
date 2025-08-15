@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import ModernNavbar from './components/ModernNavbar';
+import ModernNavbar from './Components/modern_navbar';
 import HomePage from './components/HomePage';
 import ConferencePage from './components/ConferencePage';
 import TeamPage from './components/TeamPage';
