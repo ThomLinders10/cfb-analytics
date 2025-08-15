@@ -5,12 +5,21 @@ class RealDataAPI {
                        process.env.REACT_APP_ML_ENGINE_URL ||
                        'https://your-api-gateway-id.execute-api.us-east-1.amazonaws.com/dev';
         this.region = process.env.REACT_APP_REGION || 'us-east-1';
+        
+        // Remove trailing slash if it exists to prevent double slashes
+        this.baseURL = this.baseURL.replace(/\/$/, '');
     }
 
     // Real API call wrapper with error handling
     async makeAPICall(endpoint, data = {}, method = 'POST') {
         try {
-            const response = await fetch(`${this.baseURL}${endpoint}`, {
+            // Ensure endpoint starts with / and build clean URL
+            const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+            const fullURL = `${this.baseURL}${cleanEndpoint}`;
+            
+            console.log(`Making API call to: ${fullURL}`);
+            
+            const response = await fetch(fullURL, {
                 method: method,
                 headers: {
                     'Content-Type': 'application/json',
@@ -281,7 +290,7 @@ class RealDataAPI {
     async healthCheck() {
         try {
             const startTime = Date.now();
-            await this.makeAPICall('/teams', {}, 'GET');
+            await this.makeAPICall('/model-accuracy', { action: 'healthCheck' });
             const responseTime = Date.now() - startTime;
 
             return {
