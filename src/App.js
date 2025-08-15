@@ -18,8 +18,11 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/conferences" element={<ConferencePage />} />
+            <Route path="/conference/:conferenceName" element={<ConferencePage />} />
             <Route path="/team/:teamId" element={<TeamPage />} />
             <Route path="/predictions" element={<PredictionsPage />} />
+            <Route path="/community" element={<div>Community Page Coming Soon</div>} />
+            <Route path="/trivia" element={<div>Trivia Page Coming Soon</div>} />
             <Route path="*" element={<div>Page Not Found</div>} />
           </Routes>
         </main>
