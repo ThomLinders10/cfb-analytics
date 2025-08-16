@@ -1,416 +1,69 @@
-import React, { useState, useEffect } from 'react';
-import './PredictionsPage.css';
+﻿import React, { useState } from 'react';
 
-const PredictionsPage = () => {
-  const [predictions, setPredictions] = useState([]);
-  const [realAccuracy, setRealAccuracy] = useState(null);
-  const [modelInfo, setModelInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedWeek, setSelectedWeek] = useState('all');
+const DEFAULT_API_BASE = 'https://3k8m39q58c.execute-api.us-east-1.amazonaws.com/dev';
+// Use env var if set; otherwise fall back to your real API base.
+const API_BASE = (process.env.REACT_APP_API_GATEWAY_URL || DEFAULT_API_BASE).replace(/\/$/, '');
 
-  // Real API endpoints
-  const API_BASE = process.env.REACT_APP_API_GATEWAY_URL || 'https://your-api-gateway-id.execute-api.us-east-1.amazonaws.com/dev';
+export default function PredictionsPage() {
+  const [season, setSeason] = useState(2024);
+  const [homeTeam, setHomeTeam] = useState('LSU');
+  const [awayTeam, setAwayTeam] = useState('UCLA');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadRealPredictionsAndAccuracy();
-  }, []);
-
-  const loadRealPredictionsAndAccuracy = async () => {
+  const submit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setResult(null);
     try {
-      setLoading(true);
-      setError(null);
-
-      // Get real model accuracy first
-      const accuracyResponse = await fetch(`${API_BASE}/model-accuracy`, {
+      const resp = await fetch(${API_BASE}/predict, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'getOverallAccuracy'
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ season: Number(season), homeTeam, awayTeam }),
       });
-
-      if (accuracyResponse.ok) {
-        const accuracyData = await accuracyResponse.json();
-        setRealAccuracy(accuracyData);
-        setModelInfo(accuracyData.modelInfo);
+      if (!resp.ok) {
+        const txt = await resp.text();
+        throw new Error(HTTP : );
       }
-
-      // Load real predictions from your ML model
-      const predictionsResponse = await fetch(`${API_BASE}/current-predictions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'getCurrentPredictions',
-          season: 2024,
-          includeCompleted: true
-        })
-      });
-
-      if (predictionsResponse.ok) {
-        const predictionsData = await predictionsResponse.json();
-        setPredictions(predictionsData.predictions || []);
-      } else {
-        // If no predictions exist yet, show honest message
-        setPredictions([]);
-      }
-
+      const json = await resp.json();
+      setResult(json);
     } catch (err) {
-      console.error('Error loading predictions:', err);
-      setError(`Failed to load predictions: ${err.message}`);
-      
-      // Set honest defaults
-      setRealAccuracy({
-        accuracy: 0,
-        totalPredictions: 0,
-        correctPredictions: 0,
-        message: 'No completed predictions available yet'
-      });
+      setError(err.message || String(err));
     } finally {
       setLoading(false);
     }
   };
 
-  const generateNewPrediction = async (homeTeam, awayTeam) => {
-    try {
-      const response = await fetch(`${API_BASE}/generate-prediction`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          homeTeam,
-          awayTeam,
-          action: 'generatePrediction'
-        })
-      });
-
-      if (response.ok) {
-        const newPrediction = await response.json();
-        setPredictions(prev => [newPrediction, ...prev]);
-        return newPrediction;
-      } else {
-        throw new Error('Failed to generate prediction');
-      }
-    } catch (err) {
-      console.error('Error generating prediction:', err);
-      return null;
-    }
-  };
-
-  const filteredPredictions = selectedWeek === 'all' 
-    ? predictions 
-    : predictions.filter(pred => pred.week === parseInt(selectedWeek));
-
-  const getGameStatus = (prediction) => {
-    if (prediction.completed) {
-      const correct = prediction.actualWinner === prediction.predictedWinner;
-      return {
-        status: 'completed',
-        correct,
-        accuracy: prediction.predictionAccuracy
-      };
-    } else if (prediction.inProgress) {
-      return { status: 'live' };
-    } else {
-      return { status: 'upcoming' };
-    }
-  };
-
-  const formatConfidence = (confidence) => {
-    if (!confidence) return 'N/A';
-    return `${(confidence * 100).toFixed(0)}%`;
-  };
-
-  if (loading) {
-    return (
-      <div className="predictions-page">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Loading real ML predictions and accuracy data...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="predictions-page">
-      <div className="predictions-header">
-        <h1>🎯 College Football Predictions</h1>
-        <p>Real-time predictions powered by machine learning</p>
+    <div style={{maxWidth: 720, margin: '40px auto', padding: 16}}>
+      <h1>College Football Predictions</h1>
+
+      <div style={{marginBottom: 12, fontSize: 12, color: '#555'}}>
+        API: <code>{API_BASE}</code>
       </div>
 
-      <div className="accuracy-dashboard">
-        {realAccuracy ? (
-          <div className="accuracy-cards">
-            <div className="accuracy-card main-accuracy">
-              <h3>Overall Model Accuracy</h3>
-              <div className="accuracy-display">
-                {realAccuracy.totalPredictions > 0 ? (
-                  <>
-                    <div className="accuracy-number">
-                      {(realAccuracy.accuracy * 100).toFixed(1)}%
-                    </div>
-                    <div className="accuracy-details">
-                      {realAccuracy.correctPredictions} of {realAccuracy.totalPredictions} correct
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="accuracy-number">--</div>
-                    <div className="accuracy-details">
-                      No completed predictions yet
-                    </div>
-                    <div className="accuracy-note">
-                      Accuracy tracking begins with first game results
-                    </div>
-                  </>
-                )}
-              </div>
+      <form onSubmit={submit} style={{display:'grid', gap:12}}>
+        <label>Season <input value={season} onChange={e=>setSeason(e.target.value)} /></label>
+        <label>Home Team <input value={homeTeam} onChange={e=>setHomeTeam(e.target.value)} /></label>
+        <label>Away Team <input value={awayTeam} onChange={e=>setAwayTeam(e.target.value)} /></label>
+        <button type="submit" disabled={loading}>{loading ? 'Predicting…' : 'Predict Game'}</button>
+      </form>
+
+      {error && <div style={{marginTop:16, color:'#b00'}}>Error: {error}</div>}
+
+      {result && (
+        <div style={{marginTop:24}}>
+          <h2>Result</h2>
+          <pre>{JSON.stringify(result, null, 2)}</pre>
+          {result?.predicted && (
+            <div>
+              <p><strong>Score:</strong> {Math.round(result.predicted.homePoints)}–{Math.round(result.predicted.awayPoints)} ({result.matchup.homeTeam} vs {result.matchup.awayTeam})</p>
             </div>
-
-            {modelInfo && (
-              <div className="accuracy-card model-info">
-                <h3>Model Information</h3>
-                <div className="model-details">
-                  <div className="model-stat">
-                    <span className="label">Model Type:</span>
-                    <span className="value">{modelInfo.type || 'Random Forest Ensemble'}</span>
-                  </div>
-                  <div className="model-stat">
-                    <span className="label">Training Games:</span>
-                    <span className="value">{modelInfo.trainingGames || 'N/A'}</span>
-                  </div>
-                  <div className="model-stat">
-                    <span className="label">Features:</span>
-                    <span className="value">{modelInfo.features || 'N/A'}</span>
-                  </div>
-                  <div className="model-stat">
-                    <span className="label">Last Updated:</span>
-                    <span className="value">
-                      {modelInfo.lastTrained 
-                        ? new Date(modelInfo.lastTrained).toLocaleDateString()
-                        : 'Unknown'
-                      }
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="accuracy-card recent-performance">
-              <h3>Recent Performance</h3>
-              <div className="recent-stats">
-                {realAccuracy.recentAccuracy ? (
-                  <>
-                    <div className="recent-stat">
-                      <span className="label">Last 10 Games:</span>
-                      <span className="value">{(realAccuracy.recentAccuracy * 100).toFixed(1)}%</span>
-                    </div>
-                    <div className="recent-stat">
-                      <span className="label">Trend:</span>
-                      <span className={`value ${realAccuracy.trend}`}>
-                        {realAccuracy.trend === 'improving' ? '📈 Improving' : 
-                         realAccuracy.trend === 'declining' ? '📉 Declining' : '➡️ Stable'}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="no-recent-data">
-                    Insufficient data for recent performance analysis
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="accuracy-error">
-            <p>⚠️ Unable to load accuracy data</p>
-          </div>
-        )}
-      </div>
-
-      <div className="predictions-controls">
-        <div className="week-selector">
-          <label htmlFor="week-select">Filter by Week:</label>
-          <select 
-            id="week-select"
-            value={selectedWeek}
-            onChange={(e) => setSelectedWeek(e.target.value)}
-          >
-            <option value="all">All Weeks</option>
-            {Array.from({length: 15}, (_, i) => (
-              <option key={i + 1} value={i + 1}>Week {i + 1}</option>
-            ))}
-          </select>
+          )}
         </div>
-
-        <button 
-          onClick={loadRealPredictionsAndAccuracy}
-          className="refresh-btn"
-        >
-          🔄 Refresh Predictions
-        </button>
-      </div>
-
-      <div className="predictions-list">
-        {error && (
-          <div className="error-message">
-            <p>⚠️ {error}</p>
-            <p>Ensure your ML models are trained and prediction endpoints are available.</p>
-          </div>
-        )}
-
-        {filteredPredictions.length > 0 ? (
-          filteredPredictions.map((prediction, index) => {
-            const gameStatus = getGameStatus(prediction);
-            
-            return (
-              <div key={prediction.gameId || index} className="prediction-card">
-                <div className="prediction-header">
-                  <div className="game-info">
-                    <h3 className="matchup">
-                      {prediction.homeTeam} vs {prediction.awayTeam}
-                    </h3>
-                    <div className="game-details">
-                      <span className="week">Week {prediction.week || 'TBD'}</span>
-                      <span className="date">
-                        {prediction.gameDate 
-                          ? new Date(prediction.gameDate).toLocaleDateString()
-                          : 'Date TBD'
-                        }
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className={`game-status ${gameStatus.status}`}>
-                    {gameStatus.status === 'completed' ? (
-                      <span className={gameStatus.correct ? 'correct' : 'incorrect'}>
-                        {gameStatus.correct ? '✅ Correct' : '❌ Incorrect'}
-                      </span>
-                    ) : gameStatus.status === 'live' ? (
-                      <span>🔴 Live</span>
-                    ) : (
-                      <span>⏰ Upcoming</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="prediction-content">
-                  <div className="prediction-details">
-                    <div className="predicted-score">
-                      <h4>Prediction</h4>
-                      <div className="score">
-                        {prediction.predictedHomeScore} - {prediction.predictedAwayScore}
-                      </div>
-                      <div className="winner">
-                        Winner: {prediction.predictedWinner === 'home' 
-                          ? prediction.homeTeam 
-                          : prediction.awayTeam
-                        }
-                      </div>
-                    </div>
-
-                    {prediction.completed && (
-                      <div className="actual-score">
-                        <h4>Actual Result</h4>
-                        <div className="score">
-                          {prediction.actualHomeScore} - {prediction.actualAwayScore}
-                        </div>
-                        <div className="winner">
-                          Winner: {prediction.actualWinner === 'home' 
-                            ? prediction.homeTeam 
-                            : prediction.awayTeam
-                          }
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="prediction-metrics">
-                      <div className="metric">
-                        <span className="label">Confidence</span>
-                        <span className="value">{formatConfidence(prediction.confidence)}</span>
-                      </div>
-                      <div className="metric">
-                        <span className="label">Margin</span>
-                        <span className="value">{prediction.predictedMargin?.toFixed(1) || 'N/A'} pts</span>
-                      </div>
-                      {prediction.completed && prediction.scoreDifference && (
-                        <div className="metric">
-                          <span className="label">Score Diff</span>
-                          <span className="value">{prediction.scoreDifference.toFixed(1)} pts</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {prediction.keyFactors && (
-                    <div className="key-factors">
-                      <h4>Key Factors</h4>
-                      <ul>
-                        {prediction.keyFactors.map((factor, idx) => (
-                          <li key={idx}>{factor}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-
-                <div className="prediction-footer">
-                  <div className="model-used">
-                    Model: {prediction.modelType || 'Random Forest Ensemble'}
-                  </div>
-                  <div className="prediction-time">
-                    Generated: {prediction.timestamp 
-                      ? new Date(prediction.timestamp).toLocaleString()
-                      : 'Unknown'
-                    }
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        ) : (
-          <div className="no-predictions">
-            <h3>No Predictions Available</h3>
-            <p>
-              {selectedWeek === 'all' 
-                ? 'No predictions have been generated yet.' 
-                : `No predictions available for Week ${selectedWeek}.`
-              }
-            </p>
-            <div className="prediction-status-note">
-              <p>📊 Predictions are generated using real ML models trained on your database</p>
-              <p>🎯 Accuracy is calculated from actual game results vs predictions</p>
-              <p>⚠️ No hardcoded values - all numbers are data-driven</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="data-integrity-info">
-        <h3>Data Integrity Promise</h3>
-        <div className="integrity-items">
-          <div className="integrity-item">
-            ✅ All predictions generated using trained ML models
-          </div>
-          <div className="integrity-item">
-            ✅ Accuracy calculated from real game results
-          </div>
-          <div className="integrity-item">
-            ✅ No hardcoded percentages or fake statistics
-          </div>
-          <div className="integrity-item">
-            ✅ Model performance tracked and updated continuously
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
-};
-
-export default PredictionsPage;
+}
