@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 
 const DEFAULT_API_BASE = "https://3k8m39q58c.execute-api.us-east-1.amazonaws.com/dev";
 const API_BASE = (process.env.REACT_APP_API_GATEWAY_URL || DEFAULT_API_BASE).replace(/\/$/, "");
@@ -9,23 +9,29 @@ function fmt(n) {
 }
 
 function TwoColRow({ label, left, right }) {
-  const both = Number.isFinite(+left) && Number.isFinite(+right);
-  const delta = both ? (+right - +left) : null; // actual - predicted
+  const leftNum = Number.isFinite(+left) ? +left : null;
+  const rightNum = Number.isFinite(+right) ? +right : null;
+  const both = leftNum !== null && rightNum !== null;
+  const delta = both ? rightNum - leftNum : null; // actual - predicted
   const color = delta === null ? "#555" : delta === 0 ? "#555" : (delta > 0 ? "#0a0" : "#b00");
   const sign = delta === null ? "" : (delta > 0 ? "+" : "");
   return (
     <tr>
       <td style={{ padding: "8px 6px", color: "#555" }}>{label}</td>
-      <td style={{ padding: "8px 6px", textAlign: "right" }}>{Number.isFinite(+left) ? fmt(left) : left}</td>
-      <td style={{ padding: "8px 6px", textAlign: "right" }}>{Number.isFinite(+right) ? fmt(right) : right}</td>
-      <td style={{ padding: "8px 6px", textAlign: "right", color }}>{delta === null ? "—" : `${sign}${fmt(delta)}`}</td>
+      <td style={{ padding: "8px 6px", textAlign: "right" }}>{leftNum !== null ? fmt(leftNum) : (left || "--")}</td>
+      <td style={{ padding: "8px 6px", textAlign: "right" }}>{rightNum !== null ? fmt(rightNum) : (right || "TBD")}</td>
+      <td style={{ padding: "8px 6px", textAlign: "right", color }}>{delta === null ? "--" : `${sign}${fmt(delta)}`}</td>
     </tr>
   );
 }
 
 function ReviewTable({ pred, act, homeName, awayName }) {
-  const hasActuals = act && Number.isFinite(act.homePts) && Number.isFinite(act.awayPts);
+  const hasActuals = !!(act && Number.isFinite(act.homePts) && Number.isFinite(act.awayPts));
   const A = hasActuals ? act : null;
+
+  const predMargin = Math.round((pred.homePoints ?? 0) - (pred.awayPoints ?? 0));
+  const actMargin  = hasActuals ? Math.round((A.homePts ?? 0) - (A.awayPts ?? 0)) : null;
+  const marginDelta = actMargin === null ? null : (actMargin - predMargin);
 
   return (
     <div style={{ overflowX: "auto" }}>
@@ -35,30 +41,30 @@ function ReviewTable({ pred, act, homeName, awayName }) {
             <th style={{ textAlign: "left", padding: "8px 6px", borderBottom: "1px solid #eee" }}></th>
             <th style={{ textAlign: "right", padding: "8px 6px", borderBottom: "1px solid #eee" }}>Predicted</th>
             <th style={{ textAlign: "right", padding: "8px 6px", borderBottom: "1px solid #eee" }}>{hasActuals ? "Actual" : "TBD"}</th>
-            <th style={{ textAlign: "right", padding: "8px 6px", borderBottom: "1px solid #eee" }}>Δ (Act − Pred)</th>
+            <th style={{ textAlign: "right", padding: "8px 6px", borderBottom: "1px solid #eee" }}>Delta (Act - Pred)</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td style={{ padding: "8px 6px", fontWeight: 600 }}>Score</td>
             <td style={{ padding: "8px 6px", textAlign: "right" }}>
-              {Math.round(pred.homePoints)}–{Math.round(pred.awayPoints)}
+              {Math.round(pred.homePoints ?? 0)}-{Math.round(pred.awayPoints ?? 0)}
             </td>
             <td style={{ padding: "8px 6px", textAlign: "right" }}>
-              {hasActuals ? `${fmt(A.homePts)}–${fmt(A.awayPts)}` : "TBD"}
+              {hasActuals ? `${fmt(A.homePts)}-${fmt(A.awayPts)}` : "TBD"}
             </td>
-            <td style={{ padding: "8px 6px", textAlign: "right", color: hasActuals ? (Math.round(A.homePts - A.awayPts) - Math.round(pred.homePoints - pred.awayPoints) > 0 ? "#0a0" : "#b00") : "#555" }}>
-              {hasActuals ? `${fmt((A.homePts - A.awayPts) - (pred.homePoints - pred.awayPoints))}` : "—"}
+            <td style={{ padding: "8px 6px", textAlign: "right", color: marginDelta === null ? "#555" : (marginDelta > 0 ? "#0a0" : "#b00") }}>
+              {marginDelta === null ? "--" : fmt(marginDelta)}
             </td>
           </tr>
 
-          <TwoColRow label={`${homeName} total yds`} left={pred.homeYds?.total} right={hasActuals ? A.homeYdsTotal : "TBD"} />
-          <TwoColRow label={`${homeName} rush yds`} left={pred.homeYds?.rushing} right={hasActuals ? A.homeYdsRush : "TBD"} />
-          <TwoColRow label={`${homeName} pass yds`} left={pred.homeYds?.passing} right={hasActuals ? A.homeYdsPass : "TBD"} />
+          <TwoColRow label={`${homeName} total yds`} left={pred.homeYds?.total}   right={hasActuals ? A.homeYdsTotal : null} />
+          <TwoColRow label={`${homeName} rush yds`}  left={pred.homeYds?.rushing} right={hasActuals ? A.homeYdsRush  : null} />
+          <TwoColRow label={`${homeName} pass yds`}  left={pred.homeYds?.passing} right={hasActuals ? A.homeYdsPass  : null} />
 
-          <TwoColRow label={`${awayName} total yds`} left={pred.awayYds?.total} right={hasActuals ? A.awayYdsTotal : "TBD"} />
-          <TwoColRow label={`${awayName} rush yds`} left={pred.awayYds?.rushing} right={hasActuals ? A.awayYdsRush : "TBD"} />
-          <TwoColRow label={`${awayName} pass yds`} left={pred.awayYds?.passing} right={hasActuals ? A.awayYdsPass : "TBD"} />
+          <TwoColRow label={`${awayName} total yds`} left={pred.awayYds?.total}   right={hasActuals ? A.awayYdsTotal : null} />
+          <TwoColRow label={`${awayName} rush yds`}  left={pred.awayYds?.rushing} right={hasActuals ? A.awayYdsRush  : null} />
+          <TwoColRow label={`${awayName} pass yds`}  left={pred.awayYds?.passing} right={hasActuals ? A.awayYdsPass  : null} />
         </tbody>
       </table>
     </div>
@@ -74,8 +80,13 @@ export default function PredictionsPage() {
   const [error, setError] = useState("");
   const [showDetails, setShowDetails] = useState(false);
 
-  // Optional: user-entered actuals for review (until backend wires real data)
+  // schedule/actuals metadata
+  const [scheduled, setScheduled] = useState(null); // true/false/null
+  const [gameMeta, setGameMeta] = useState(null);   // {date, venue, neutralSite}
+  const [autoActuals, setAutoActuals] = useState(null); // {homePts, awayPts, ...} if final
   const [hasActuals, setHasActuals] = useState(false);
+
+  // manual actuals (optional)
   const [actHomePts, setActHomePts] = useState("");
   const [actAwayPts, setActAwayPts] = useState("");
   const [actHomeYdsRush, setActHomeYdsRush] = useState("");
@@ -88,7 +99,13 @@ export default function PredictionsPage() {
     setLoading(true);
     setError("");
     setResult(null);
+    setScheduled(null);
+    setGameMeta(null);
+    setAutoActuals(null);
+    setHasActuals(false);
+
     try {
+      // 1) Call predictor
       const res = await fetch(`${API_BASE}/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -100,6 +117,47 @@ export default function PredictionsPage() {
       }
       const data = await res.json();
       setResult(data);
+
+      // 2) Check schedule/actuals from static json
+      try {
+        const schedRes = await fetch(`/schedules/${season}.json`, { cache: "no-store" });
+        if (schedRes.ok) {
+          const sched = await schedRes.json();
+          // try to match either exact (home/away) or reversed
+          const found = Array.isArray(sched.games) ? sched.games.find(g =>
+            (g.homeTeam?.toLowerCase() === homeTeam.toLowerCase() && g.awayTeam?.toLowerCase() === awayTeam.toLowerCase()) ||
+            (g.homeTeam?.toLowerCase() === awayTeam.toLowerCase() && g.awayTeam?.toLowerCase() === homeTeam.toLowerCase())
+          ) : null;
+
+          if (!found) {
+            setScheduled(false);
+          } else {
+            setScheduled(true);
+            setGameMeta({ date: found.date || null, venue: found.venue || null, neutralSite: !!found.neutralSite });
+
+            // If schedule is reversed relative to inputs, swap actuals orientation
+            const sameOrientation = (found.homeTeam?.toLowerCase() === homeTeam.toLowerCase());
+            if (found.final && found.actual) {
+              const A = {
+                homePts: sameOrientation ? found.actual.homePts : found.actual.awayPts,
+                awayPts: sameOrientation ? found.actual.awayPts : found.actual.homePts,
+                homeYdsRush: sameOrientation ? found.actual.homeYds?.rushing : found.actual.awayYds?.rushing,
+                homeYdsPass: sameOrientation ? found.actual.homeYds?.passing : found.actual.awayYds?.passing,
+                awayYdsRush: sameOrientation ? found.actual.awayYds?.rushing : found.actual.homeYds?.rushing,
+                awayYdsPass: sameOrientation ? found.actual.awayYds?.passing : found.actual.homeYds?.passing
+              };
+              A.homeYdsTotal = (A.homeYdsRush ?? 0) + (A.homeYdsPass ?? 0);
+              A.awayYdsTotal = (A.awayYdsRush ?? 0) + (A.awayYdsPass ?? 0);
+              setAutoActuals(A);
+              setHasActuals(true);
+            }
+          }
+        } else {
+          setScheduled(null); // no schedule file
+        }
+      } catch {
+        setScheduled(null);
+      }
     } catch (err) {
       setError(err.message || String(err));
     } finally {
@@ -114,16 +172,17 @@ export default function PredictionsPage() {
     awayYds: result?.yards?.away ?? {},
   } : null;
 
-  const act = hasActuals ? {
-    homePts: actHomePts === "" ? null : +actHomePts,
-    awayPts: actAwayPts === "" ? null : +actAwayPts,
-    homeYdsRush: actHomeYdsRush === "" ? null : +actHomeYdsRush,
-    homeYdsPass: actHomeYdsPass === "" ? null : +actHomeYdsPass,
+  // pick autoActuals if present; else manual
+  const act = autoActuals ? autoActuals : (hasActuals ? {
+    homePts:      actHomePts      === "" ? null : +actHomePts,
+    awayPts:      actAwayPts      === "" ? null : +actAwayPts,
+    homeYdsRush:  actHomeYdsRush  === "" ? null : +actHomeYdsRush,
+    homeYdsPass:  actHomeYdsPass  === "" ? null : +actHomeYdsPass,
     homeYdsTotal: (actHomeYdsRush === "" || actHomeYdsPass === "") ? null : (+actHomeYdsRush + +actHomeYdsPass),
-    awayYdsRush: actAwayYdsRush === "" ? null : +actAwayYdsRush,
-    awayYdsPass: actAwayYdsPass === "" ? null : +actAwayYdsPass,
+    awayYdsRush:  actAwayYdsRush  === "" ? null : +actAwayYdsRush,
+    awayYdsPass:  actAwayYdsPass  === "" ? null : +actAwayYdsPass,
     awayYdsTotal: (actAwayYdsRush === "" || actAwayYdsPass === "") ? null : (+actAwayYdsRush + +actAwayYdsPass),
-  } : null;
+  } : null);
 
   const favored =
     result && result.predicted
@@ -132,7 +191,7 @@ export default function PredictionsPage() {
 
   const margin =
     result && result.predicted
-      ? Math.abs(Math.round(result.predicted.homePoints - result.predicted.awayPoints))
+      ? Math.abs(Math.round((result.predicted.homePoints ?? 0) - (result.predicted.awayPoints ?? 0)))
       : null;
 
   return (
@@ -167,13 +226,25 @@ export default function PredictionsPage() {
 
       {result ? (
         <>
+          <div style={{ marginTop: 12, padding: 10, background: "#f8f8f8", borderRadius: 8 }}>
+            {scheduled === false && <div>Schedule: Not scheduled for {season}.</div>}
+            {scheduled === true && (
+              <div>
+                <div>Schedule: Scheduled{gameMeta?.date ? ` on ${gameMeta.date}` : ""}{gameMeta?.venue ? ` • ${gameMeta.venue}` : ""}{gameMeta?.neutralSite ? " • Neutral site" : ""}.</div>
+                {autoActuals && <div>Result: Final — actuals loaded.</div>}
+                {!autoActuals && <div>Result: TBD — no final posted in schedule file.</div>}
+              </div>
+            )}
+            {scheduled === null && <div>Schedule: Unknown (no schedule file for {season}).</div>}
+          </div>
+
           <div style={{
-            marginTop: 20, padding: 12, border: "1px solid #ddd", borderRadius: 10,
+            marginTop: 12, padding: 12, border: "1px solid #ddd", borderRadius: 10,
             boxShadow: "0 1px 3px rgba(0,0,0,0.06)", background: "#fff"
           }}>
             <div style={{ fontWeight: 600, marginBottom: 6 }}>Projected Score</div>
             <div style={{ fontSize: 20, fontWeight: 700 }}>
-              {result.matchup?.homeTeam} {Math.round(result.predicted.homePoints)} – {Math.round(result.predicted.awayPoints)} {result.matchup?.awayTeam}
+              {result.matchup?.homeTeam} {Math.round(result.predicted?.homePoints ?? 0)} - {Math.round(result.predicted?.awayPoints ?? 0)} {result.matchup?.awayTeam}
             </div>
             <div style={{ color: "#555", marginTop: 6 }}>
               Favored: <strong>{favored}</strong> by <strong>{margin}</strong>
@@ -190,31 +261,33 @@ export default function PredictionsPage() {
               pred={{
                 homePoints: result.predicted?.homePoints ?? null,
                 awayPoints: result.predicted?.awayPoints ?? null,
-                homeYds: result.yards?.home ?? {},
-                awayYds: result.yards?.away ?? {},
+                homeYds: { total: (result.yards?.home?.rushing ?? 0) + (result.yards?.home?.passing ?? 0), ...result.yards?.home },
+                awayYds: { total: (result.yards?.away?.rushing ?? 0) + (result.yards?.away?.passing ?? 0), ...result.yards?.away },
               }}
               act={act}
               homeName={result.matchup?.homeTeam}
               awayName={result.matchup?.awayTeam}
             />
 
-            <div style={{ marginTop: 12, background: "#f8f8f8", borderRadius: 8, padding: 10 }}>
-              <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <input type="checkbox" checked={hasActuals} onChange={(e) => setHasActuals(e.target.checked)} />
-                <span>Enter actuals for review (optional)</span>
-              </label>
+            {!autoActuals && (
+              <div style={{ marginTop: 12, background: "#f8f8f8", borderRadius: 8, padding: 10 }}>
+                <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <input type="checkbox" checked={hasActuals} onChange={(e) => setHasActuals(e.target.checked)} />
+                  <span>Enter actuals for review (optional)</span>
+                </label>
 
-              {hasActuals ? (
-                <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", marginTop: 10 }}>
-                  <label>Home points <input value={actHomePts} onChange={(e)=>setActHomePts(e.target.value)} /></label>
-                  <label>Away points <input value={actAwayPts} onChange={(e)=>setActAwayPts(e.target.value)} /></label>
-                  <label>Home rush yds <input value={actHomeYdsRush} onChange={(e)=>setActHomeYdsRush(e.target.value)} /></label>
-                  <label>Home pass yds <input value={actHomeYdsPass} onChange={(e)=>setActHomeYdsPass(e.target.value)} /></label>
-                  <label>Away rush yds <input value={actAwayYdsRush} onChange={(e)=>setActAwayYdsRush(e.target.value)} /></label>
-                  <label>Away pass yds <input value={actAwayYdsPass} onChange={(e)=>setActAwayYdsPass(e.target.value)} /></label>
-                </div>
-              ) : null}
-            </div>
+                {hasActuals ? (
+                  <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", marginTop: 10 }}>
+                    <label>Home points <input value={actHomePts} onChange={(e)=>setActHomePts(e.target.value)} /></label>
+                    <label>Away points <input value={actAwayPts} onChange={(e)=>setActAwayPts(e.target.value)} /></label>
+                    <label>Home rush yds <input value={actHomeYdsRush} onChange={(e)=>setActHomeYdsRush(e.target.value)} /></label>
+                    <label>Home pass yds <input value={actHomeYdsPass} onChange={(e)=>setActHomeYdsPass(e.target.value)} /></label>
+                    <label>Away rush yds <input value={actAwayYdsRush} onChange={(e)=>setActAwayYdsRush(e.target.value)} /></label>
+                    <label>Away pass yds <input value={actAwayYdsPass} onChange={(e)=>setActAwayYdsPass(e.target.value)} /></label>
+                  </div>
+                ) : null}
+              </div>
+            )}
           </div>
 
           <div style={{ marginTop: 12 }}>

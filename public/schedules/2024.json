@@ -1,0 +1,19 @@
+{
+  "games": [
+    {
+      "season": 2024,
+      "date": "2024-09-01",
+      "neutralSite": false,
+      "homeTeam": "LSU",
+      "awayTeam": "UCLA",
+      "venue": "Baton Rouge, LA",
+      "final": true,
+      "actual": {
+        "homePts": 34,
+        "awayPts": 17,
+        "homeYds": { "rushing": 102, "passing": 352 },
+        "awayYds": { "rushing": 14,  "passing": 281 }
+      }
+    }
+  ]
+}
