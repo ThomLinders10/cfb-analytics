@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './modern_navbar.css';
 
@@ -108,7 +108,7 @@ const Navbar = ({ user, onShowRegistration, onShowSubscription, onShowSignIn }) 
       <div className="accuracy-banner">
         <div className="banner-content">
           <span className="banner-text">
-            ðŸŽ¯ <strong>Live-tracked Accuracy</strong> â€¢ Football & Basketball â€¢ Better than ESPN, CBS, and Vegas â€¢ 
+            ðŸŽ¯ <strong>Live-tracked Accuracy • BUILD 7fbfb741 - 2025-08-16 07:39:47</strong> â€¢ Football & Basketball â€¢ Better than ESPN, CBS, and Vegas â€¢ 
             <span className="banner-highlight">30-Day Free Trial</span>
           </span>
         </div>
@@ -118,3 +118,4 @@ const Navbar = ({ user, onShowRegistration, onShowSubscription, onShowSignIn }) 
 };
 
 export default Navbar;
+
