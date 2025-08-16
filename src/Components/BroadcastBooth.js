@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { API } from '../MockAWSAmplify.js';
 import './BroadcastBooth.css';
 
@@ -38,7 +38,7 @@ const BroadcastBooth = ({ user, onSubscriptionClick }) => {
           context: {
             week: currentWeek,
             topGames: gamesPredictions.slice(0, 3),
-            accuracy: '92.3%',
+            accuracy: null,
             dataPoints: '320,000+',
             weeklyHighlights: 'SEC Championship implications, CFP rankings update'
           }
@@ -138,11 +138,11 @@ const BroadcastBooth = ({ user, onSubscriptionClick }) => {
       {/* Header */}
       <div className="broadcast-header">
         <div className="logo-section">
-          <h1>📺 CFB Analytics Broadcast Booth</h1>
+          <h1>ðŸ“º CFB Analytics Broadcast Booth</h1>
           <p className="tagline">Live AI Analysis with Bob & Tony</p>
         </div>
         <div className="accuracy-badge">
-          <span className="accuracy-number">92.3%</span>
+          <span className="accuracy-number">Live-tracked</span>
           <span className="accuracy-label">Prediction Accuracy</span>
         </div>
       </div>
@@ -155,25 +155,25 @@ const BroadcastBooth = ({ user, onSubscriptionClick }) => {
               <div className="video-loading">
                 <div className="loading-animation">
                   <div className="avatar-placeholder bob">
-                    <div className="avatar-face">👨‍💼</div>
+                    <div className="avatar-face">ðŸ‘¨â€ðŸ’¼</div>
                     <div className="avatar-name">Bob</div>
                     <div className="speaking-indicator"></div>
                   </div>
                   <div className="avatar-placeholder tony">
-                    <div className="avatar-face">👨‍🏫</div>
+                    <div className="avatar-face">ðŸ‘¨â€ðŸ«</div>
                     <div className="avatar-name">Tony</div>
                     <div className="speaking-indicator"></div>
                   </div>
                 </div>
                 <div className="generation-status">
                   <div className="spinner"></div>
-                  <h3>🎬 Generating This Week's Analysis</h3>
+                  <h3>ðŸŽ¬ Generating This Week's Analysis</h3>
                   <p>Bob and Tony are preparing your personalized CFB breakdown...</p>
                   <div className="generation-progress">
-                    <div className="progress-step active">📝 Analyzing Games</div>
-                    <div className="progress-step active">🎙️ Generating Script</div>
-                    <div className="progress-step active">🎬 Creating Video</div>
-                    <div className="progress-step">✅ Ready to Watch</div>
+                    <div className="progress-step active">ðŸ“ Analyzing Games</div>
+                    <div className="progress-step active">ðŸŽ™ï¸ Generating Script</div>
+                    <div className="progress-step active">ðŸŽ¬ Creating Video</div>
+                    <div className="progress-step">âœ… Ready to Watch</div>
                   </div>
                 </div>
               </div>
@@ -193,11 +193,11 @@ const BroadcastBooth = ({ user, onSubscriptionClick }) => {
                 </video>
                 <div className="video-description">
                   <div className="broadcast-info">
-                    <span className="live-badge">🔴 FRESH ANALYSIS</span>
-                    <span className="duration">Week {currentWeek} Breakdown • 2:47</span>
+                    <span className="live-badge">ðŸ”´ FRESH ANALYSIS</span>
+                    <span className="duration">Week {currentWeek} Breakdown â€¢ 2:47</span>
                   </div>
                   <h3>Bob & Tony's Week {currentWeek} CFB Preview</h3>
-                  <p>🎙️ Our AI anchors break down this week's biggest games, emerging players, and betting insights. Generated with real-time data from our 320,000+ point database.</p>
+                  <p>ðŸŽ™ï¸ Our AI anchors break down this week's biggest games, emerging players, and betting insights. Generated with real-time data from our 320,000+ point database.</p>
                 </div>
               </div>
             ) : (
@@ -205,14 +205,14 @@ const BroadcastBooth = ({ user, onSubscriptionClick }) => {
                 <div className="static-broadcast">
                   <div className="anchor-duo">
                     <div className="anchor bob">
-                      <div className="anchor-avatar">👨‍💼</div>
+                      <div className="anchor-avatar">ðŸ‘¨â€ðŸ’¼</div>
                       <div className="anchor-info">
                         <h4>Bob Richardson</h4>
                         <p>Lead Anchor</p>
                       </div>
                     </div>
                     <div className="anchor tony">
-                      <div className="anchor-avatar">👨‍🏫</div>
+                      <div className="anchor-avatar">ðŸ‘¨â€ðŸ«</div>
                       <div className="anchor-info">
                         <h4>Tony Martinez</h4>
                         <p>Stats Expert</p>
@@ -220,13 +220,13 @@ const BroadcastBooth = ({ user, onSubscriptionClick }) => {
                     </div>
                   </div>
                   <div className="fallback-content">
-                    <h3>🎬 Video Coming Soon</h3>
+                    <h3>ðŸŽ¬ Video Coming Soon</h3>
                     <p>Bob and Tony are analyzing this week's games. Your personalized broadcast will be ready shortly!</p>
                     <button 
                       onClick={loadAvatarContent}
                       className="retry-button"
                     >
-                      🔄 Refresh Analysis
+                      ðŸ”„ Refresh Analysis
                     </button>
                   </div>
                 </div>
@@ -258,7 +258,7 @@ const BroadcastBooth = ({ user, onSubscriptionClick }) => {
                 <span className="stat-label">Factors Tracked</span>
               </div>
               <div className="stat-item">
-                <span className="stat-value">92.3%</span>
+                <span className="stat-value">Live-tracked</span>
                 <span className="stat-label">Accuracy</span>
               </div>
             </div>
@@ -268,7 +268,7 @@ const BroadcastBooth = ({ user, onSubscriptionClick }) => {
 
       {/* Week Predictions Grid */}
       <div className="predictions-section">
-        <h2>🎯 This Week's Top Predictions</h2>
+        <h2>ðŸŽ¯ This Week's Top Predictions</h2>
         <div className="predictions-grid">
           {gamesPredictions.slice(0, 6).map((game, index) => (
             <div key={game.id} className="prediction-card" onClick={() => window.location.href = `/game/${game.id}`}>
@@ -301,7 +301,7 @@ const BroadcastBooth = ({ user, onSubscriptionClick }) => {
               <div className="location">{game.location}</div>
               
               <div className="ai-insights">
-                <span className="insights-label">🧠 Key Factors:</span>
+                <span className="insights-label">ðŸ§  Key Factors:</span>
                 <div className="factors-preview">
                   {game.factors.slice(0, 2).join(', ')}...
                 </div>
@@ -313,14 +313,14 @@ const BroadcastBooth = ({ user, onSubscriptionClick }) => {
 
       {/* Emerging Players Widget */}
       <div className="emerging-players-section">
-        <h2>⭐ Emerging Players This Week</h2>
+        <h2>â­ Emerging Players This Week</h2>
         <p className="section-subtitle">Players our AI flagged before they became household names</p>
         <div className="emerging-players-widget">
           {emergingPlayers.map((player, index) => (
             <div key={index} className="emerging-player-card">
               <div className="player-info">
                 <div className="player-name">{player.name}</div>
-                <div className="player-team">{player.team} • {player.position}</div>
+                <div className="player-team">{player.team} â€¢ {player.position}</div>
               </div>
               <div className="player-metrics">
                 <div className="impact-meter">
@@ -339,13 +339,13 @@ const BroadcastBooth = ({ user, onSubscriptionClick }) => {
       {/* Call to Action */}
       <div className="cta-section">
         <div className="cta-content">
-          <h2>🚀 Get Full Access to AI-Powered Analysis</h2>
+          <h2>ðŸš€ Get Full Access to AI-Powered Analysis</h2>
           <p>Join Bob and Tony for deeper game breakdowns, player analysis, and exclusive predictions</p>
           <div className="cta-benefits">
-            <div className="benefit">✅ Personalized avatar analysis for your team</div>
-            <div className="benefit">✅ 54-factor game predictions</div>
-            <div className="benefit">✅ Emerging player alerts</div>
-            <div className="benefit">✅ 30-day free trial</div>
+            <div className="benefit">âœ… Personalized avatar analysis for your team</div>
+            <div className="benefit">âœ… 54-factor game predictions</div>
+            <div className="benefit">âœ… Emerging player alerts</div>
+            <div className="benefit">âœ… 30-day free trial</div>
           </div>
           <button 
             className="cta-button"

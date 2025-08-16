@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { loadStripe } from '../MockStripe.js';
 import { Elements, CardElement, useStripe, useElements } from '../MockStripe.js';
 import { API } from '../MockAWSAmplify.js';
@@ -65,7 +65,7 @@ const CheckoutForm = ({ plan, onSuccess, onCancel }) => {
           )}
           <span className="billing-period">/{plan.interval}</span>
         </div>
-        <p className="trial-info">✨ 30-day free trial included</p>
+        <p className="trial-info">âœ¨ 30-day free trial included</p>
       </div>
 
       <div className="card-element-container">
@@ -153,15 +153,15 @@ const SubscriptionModal = ({ isOpen, onClose, onSuccess }) => {
     <div className="subscription-modal-overlay">
       <div className="subscription-modal">
         <div className="modal-header">
-          <h2>🏈 Unlock Premium CFB Analytics</h2>
-          <button className="close-btn" onClick={onClose}>×</button>
+          <h2>ðŸˆ Unlock Premium CFB Analytics</h2>
+          <button className="close-btn" onClick={onClose}>Ã—</button>
         </div>
 
         <div className="modal-content">
           {!selectedPlan ? (
             <div className="plan-selection">
               <div className="early-bird-banner">
-                <h3>🚀 Early Bird Special!</h3>
+                <h3>ðŸš€ Early Bird Special!</h3>
                 <p>First 100 subscribers get Monthly Premium for $59/month (first year)</p>
                 <p className="spots-left">{100 - subscriberCount} spots remaining</p>
               </div>
@@ -189,7 +189,7 @@ const SubscriptionModal = ({ isOpen, onClose, onSuccess }) => {
                     
                     <ul className="features-list">
                       {plan.features.map((feature, index) => (
-                        <li key={index}>✓ {feature}</li>
+                        <li key={index}>âœ“ {feature}</li>
                       ))}
                     </ul>
                     
@@ -207,19 +207,19 @@ const SubscriptionModal = ({ isOpen, onClose, onSuccess }) => {
                 <h3>Why Premium?</h3>
                 <div className="value-grid">
                   <div className="value-item">
-                    <span className="value-icon">🎯</span>
-                    <span>92.3% prediction accuracy vs 67.8% for national polls</span>
+                    <span className="value-icon">ðŸŽ¯</span>
+                    <span>Live-tracked prediction accuracy</span>
                   </div>
                   <div className="value-item">
-                    <span className="value-icon">⭐</span>
+                    <span className="value-icon">â­</span>
                     <span>Discover emerging players before anyone else</span>
                   </div>
                   <div className="value-item">
-                    <span className="value-icon">📊</span>
+                    <span className="value-icon">ðŸ“Š</span>
                     <span>54-factor analysis beats traditional metrics</span>
                   </div>
                   <div className="value-item">
-                    <span className="value-icon">⚡</span>
+                    <span className="value-icon">âš¡</span>
                     <span>Real-time updates every Monday morning</span>
                   </div>
                 </div>

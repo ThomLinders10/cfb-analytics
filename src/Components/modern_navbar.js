@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './modern_navbar.css';
 
@@ -33,8 +33,8 @@ const Navbar = ({ user, onShowRegistration, onShowSubscription, onShowSignIn }) 
             <div className="brand-logo">
               <span className="logo-csp">CSP</span>
               <div className="logo-sports">
-                <span className="sport-icon">🏈</span>
-                <span className="sport-icon">🏀</span>
+                <span className="sport-icon">ðŸˆ</span>
+                <span className="sport-icon">ðŸ€</span>
               </div>
             </div>
             <div className="brand-text-container">
@@ -54,7 +54,7 @@ const Navbar = ({ user, onShowRegistration, onShowSubscription, onShowSignIn }) 
             onMouseLeave={() => setShowConferenceDropdown(false)}
           >
             <span className="nav-link dropdown-trigger">
-              Conferences <span className="dropdown-arrow">▼</span>
+              Conferences <span className="dropdown-arrow">â–¼</span>
             </span>
             {showConferenceDropdown && (
               <div className="dropdown-menu">
@@ -108,7 +108,7 @@ const Navbar = ({ user, onShowRegistration, onShowSubscription, onShowSignIn }) 
       <div className="accuracy-banner">
         <div className="banner-content">
           <span className="banner-text">
-            🎯 <strong>92.3% Accuracy</strong> • Football & Basketball • Better than ESPN, CBS, and Vegas • 
+            ðŸŽ¯ <strong>Live-tracked Accuracy</strong> â€¢ Football & Basketball â€¢ Better than ESPN, CBS, and Vegas â€¢ 
             <span className="banner-highlight">30-Day Free Trial</span>
           </span>
         </div>

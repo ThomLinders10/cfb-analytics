@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Auth, API } from '../MockAWSAmplify.js';
 import { useNavigate } from 'react-router-dom';
 import './RegistrationSystem.css';
@@ -241,7 +241,7 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
         return (
           <div className="step-content">
             <div className="step-header">
-              <h2>🚀 Start Your Free Trial</h2>
+              <h2>ðŸš€ Start Your Free Trial</h2>
               <p>Join {subscriberCount} users already dominating CFB predictions</p>
             </div>
 
@@ -286,17 +286,17 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
 
             <div className="trial-info">
               <div className="trial-badge">
-                <span className="badge-icon">🎯</span>
+                <span className="badge-icon">ðŸŽ¯</span>
                 <div className="badge-text">
                   <strong>30-Day Free Trial</strong>
-                  <span>No credit card required • Cancel anytime</span>
+                  <span>No credit card required â€¢ Cancel anytime</span>
                 </div>
               </div>
             </div>
 
             <div className="social-proof">
               <div className="accuracy-highlight">
-                <span className="accuracy-number">92.3%</span>
+                <span className="accuracy-number">Live-tracked</span>
                 <span className="accuracy-label">Prediction Accuracy</span>
               </div>
               <div className="comparison">
@@ -311,7 +311,7 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
         return (
           <div className="step-content">
             <div className="step-header">
-              <h2>👋 Tell Us About Yourself</h2>
+              <h2>ðŸ‘‹ Tell Us About Yourself</h2>
               <p>We'll personalize your CFB analytics experience</p>
             </div>
 
@@ -345,14 +345,14 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
 
             <div className="personalization-info">
               <div className="info-card">
-                <div className="info-icon">🎨</div>
+                <div className="info-icon">ðŸŽ¨</div>
                 <div className="info-text">
                   <h4>Personalized Dashboard</h4>
                   <p>Your homepage will feature your team's predictions, opponent analysis, and conference standings</p>
                 </div>
               </div>
               <div className="info-card">
-                <div className="info-icon">🔔</div>
+                <div className="info-icon">ðŸ””</div>
                 <div className="info-text">
                   <h4>Smart Notifications</h4>
                   <p>Get alerts when your team's prediction changes or when we spot emerging players</p>
@@ -366,7 +366,7 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
         return (
           <div className="step-content">
             <div className="step-header">
-              <h2>🏈 Choose Your Favorite Team</h2>
+              <h2>ðŸˆ Choose Your Favorite Team</h2>
               <p>We'll take you straight to your team's analysis after login</p>
             </div>
 
@@ -390,8 +390,8 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
                 </div>
                 
                 <div className="coverage-note">
-                  <p>📊 We analyze all 544 teams with the same 54-factor model</p>
-                  <p>🎯 From Alabama vs Georgia to Northern Arizona vs Arizona State</p>
+                  <p>ðŸ“Š We analyze all 544 teams with the same 54-factor model</p>
+                  <p>ðŸŽ¯ From Alabama vs Georgia to Northern Arizona vs Arizona State</p>
                 </div>
               </div>
             ) : (
@@ -401,7 +401,7 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
                     className="back-btn"
                     onClick={() => setSelectedConference('')}
                   >
-                    ← Back to Conferences
+                    â† Back to Conferences
                   </button>
                   <h3>{conferences[selectedConference].name} Teams</h3>
                 </div>
@@ -424,7 +424,7 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
                 {formData.homeTeam && (
                   <div className="selection-summary">
                     <div className="selected-team">
-                      <span className="selection-icon">✅</span>
+                      <span className="selection-icon">âœ…</span>
                       <strong>Selected: {formData.homeTeam}</strong>
                       <span className="conference-badge">{conferences[selectedConference].name}</span>
                     </div>
@@ -439,7 +439,7 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
         return (
           <div className="step-content">
             <div className="step-header">
-              <h2>📋 Terms & Disclaimers</h2>
+              <h2>ðŸ“‹ Terms & Disclaimers</h2>
               <p>Please review and accept our terms</p>
             </div>
 
@@ -480,7 +480,7 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
             <div className="pricing-reminder">
               <div className="pricing-card">
                 <div className="pricing-header">
-                  <h4>🎉 Early Bird Special</h4>
+                  <h4>ðŸŽ‰ Early Bird Special</h4>
                   <div className="price-display">
                     <span className="discounted-price">$59/month</span>
                     <span className="original-price">$79/month</span>
@@ -490,10 +490,10 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
                   </div>
                 </div>
                 <div className="pricing-features">
-                  <span>✅ 30-day free trial</span>
-                  <span>✅ Cancel anytime</span>
-                  <span>✅ 92.3% prediction accuracy</span>
-                  <span>✅ All 544 teams covered</span>
+                  <span>âœ… 30-day free trial</span>
+                  <span>âœ… Cancel anytime</span>
+                  <span>âœ… Live-tracked prediction accuracy</span>
+                  <span>âœ… All 544 teams covered</span>
                 </div>
               </div>
             </div>
@@ -520,7 +520,7 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
         return (
           <div className="step-content success-step">
             <div className="success-animation">
-              <div className="success-icon">🎉</div>
+              <div className="success-icon">ðŸŽ‰</div>
               <h2>Welcome to CFB Analytics!</h2>
               <p>Your account has been created successfully</p>
             </div>
@@ -551,22 +551,22 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
             </div>
 
             <div className="welcome-benefits">
-              <h4>🎯 Your Premium Benefits:</h4>
+              <h4>ðŸŽ¯ Your Premium Benefits:</h4>
               <div className="benefit-grid">
                 <div className="benefit-item">
-                  <span className="benefit-icon">📊</span>
+                  <span className="benefit-icon">ðŸ“Š</span>
                   <span>54-factor game predictions</span>
                 </div>
                 <div className="benefit-item">
-                  <span className="benefit-icon">⭐</span>
+                  <span className="benefit-icon">â­</span>
                   <span>Emerging player detection</span>
                 </div>
                 <div className="benefit-item">
-                  <span className="benefit-icon">🎬</span>
+                  <span className="benefit-icon">ðŸŽ¬</span>
                   <span>AI video analysis</span>
                 </div>
                 <div className="benefit-item">
-                  <span className="benefit-icon">💬</span>
+                  <span className="benefit-icon">ðŸ’¬</span>
                   <span>Community access</span>
                 </div>
               </div>
@@ -579,7 +579,7 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
                 navigate(`/conference/${formData.homeConference}`);
               }}
             >
-              Continue to {conferences[formData.homeConference]?.name} →
+              Continue to {conferences[formData.homeConference]?.name} â†’
             </button>
           </div>
         );
@@ -614,7 +614,7 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
           {/* Error Display */}
           {error && (
             <div className="error-message">
-              <span className="error-icon">⚠️</span>
+              <span className="error-icon">âš ï¸</span>
               {error}
             </div>
           )}
@@ -628,7 +628,7 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
                   onClick={prevStep}
                   disabled={loading}
                 >
-                  ← Previous
+                  â† Previous
                 </button>
               )}
               
@@ -638,7 +638,7 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
                   onClick={nextStep}
                   disabled={loading}
                 >
-                  Next →
+                  Next â†’
                 </button>
               ) : (
                 <button 
@@ -646,7 +646,7 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
                   onClick={handleSubmit}
                   disabled={loading || !formData.termsAccepted || !formData.disclaimerAccepted}
                 >
-                  {loading ? 'Creating Account...' : 'Start Free Trial 🚀'}
+                  {loading ? 'Creating Account...' : 'Start Free Trial ðŸš€'}
                 </button>
               )}
             </div>
@@ -657,28 +657,28 @@ const RegistrationSystem = ({ onRegistrationComplete }) => {
         <div className="benefits-panel">
           <h3>Why Join CFB Analytics?</h3>
           <div className="benefit-item">
-            <span className="benefit-icon">📊</span>
+            <span className="benefit-icon">ðŸ“Š</span>
             <div className="benefit-text">
-              <strong>92.3% Accuracy</strong>
+              <strong>Live-tracked Accuracy</strong>
               <p>Our 54-factor AI engine outperforms ESPN by 24%</p>
             </div>
           </div>
           <div className="benefit-item">
-            <span className="benefit-icon">🎬</span>
+            <span className="benefit-icon">ðŸŽ¬</span>
             <div className="benefit-text">
               <strong>AI Video Analysis</strong>
               <p>Personalized breakdowns from our virtual broadcast team</p>
             </div>
           </div>
           <div className="benefit-item">
-            <span className="benefit-icon">⭐</span>
+            <span className="benefit-icon">â­</span>
             <div className="benefit-text">
               <strong>Emerging Players</strong>
               <p>Spot breakout stars before anyone else</p>
             </div>
           </div>
           <div className="benefit-item">
-            <span className="benefit-icon">🆓</span>
+            <span className="benefit-icon">ðŸ†“</span>
             <div className="benefit-text">
               <strong>Risk-Free Trial</strong>
               <p>30 days free, cancel anytime, no credit card needed</p>

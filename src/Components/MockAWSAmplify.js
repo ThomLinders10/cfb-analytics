@@ -1,4 +1,4 @@
-// Enhanced Mock AWS Amplify with Real Data Structure
+﻿// Enhanced Mock AWS Amplify with Real Data Structure
 // File: src/MockAWSAmplify.js
 // This simulates your real 320K+ database with actual CFB data
 
@@ -43,7 +43,7 @@ export const API = {
               id: 'pred_1',
               predictedHomeScore: 31,
               predictedAwayScore: 24,
-              confidence: 0.923, // Your 92.3% accuracy
+              confidence: null, // Your null% accuracy
               expectedBoxScore: {
                 homeRushingYards: 189,
                 awayRushingYards: 143,
@@ -128,7 +128,7 @@ export const API = {
                 awayTeam: 'Georgia', 
                 week: 14,
                 prediction: 'Alabama by 7.5',
-                confidence: 92.3,
+                confidence: null,
                 factors: ['Home field advantage', 'Rushing attack superiority', 'Defensive line depth'],
                 bettingLine: 'Alabama -6.5',
                 ourPrediction: 'Alabama -7.5',
@@ -217,7 +217,7 @@ export const API = {
         analysis: {
           keyMatchups: 'Alabama\'s rushing attack vs Georgia\'s run defense will be decisive. The Tide average 187 yards per game on the ground, while UGA allows just 98 per game.',
           xFactors: 'Weather conditions favor the running game. Both teams have elite defenses, so turnovers will be crucial. Alabama\'s home field advantage worth approximately 3.2 points.',
-          reasoning: 'Our 54-factor model gives Alabama a 92.3% probability of victory based on opponent-specific analysis. Key factors include home field (+3.2), rushing advantage (+2.1), and defensive depth (+1.8).',
+          reasoning: 'Our 54-factor model gives Alabama a null% probability of victory based on opponent-specific analysis. Key factors include home field (+3.2), rushing advantage (+2.1), and defensive depth (+1.8).',
           upsetPotential: 'Low upset potential (7.7%). Georgia would need to force 3+ turnovers or control time of possession by 8+ minutes to overcome the talent and venue disadvantage.'
         }
       };
