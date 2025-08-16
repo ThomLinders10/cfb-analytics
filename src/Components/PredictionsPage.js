@@ -17,14 +17,14 @@ export default function PredictionsPage() {
     setError('');
     setResult(null);
     try {
-      const res = await fetch(${API_BASE}/predict, {
+      const res = await fetch(`${API_BASE}/predict`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ season: Number(season), homeTeam, awayTeam }),
       });
       if (!res.ok) {
         const txt = await res.text();
-        throw new Error(HTTP : );
+        throw new Error(`HTTP ${res.status}: ${txt}`);
       }
       const data = await res.json();
       setResult(data);
