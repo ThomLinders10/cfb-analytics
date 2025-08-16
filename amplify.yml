@@ -1,0 +1,26 @@
+﻿version: 1
+applications:
+  - frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm ci
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: build
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - node_modules/**/*
+    customHeaders:
+      - pattern: /static/js/*
+        headers:
+          - key: Content-Type
+            value: application/javascript; charset=utf-8
+      - pattern: /static/css/*
+        headers:
+          - key: Content-Type
+            value: text/css; charset=utf-8
